@@ -1,0 +1,193 @@
+{
+  "tournament_id": 21162,
+  "end_at": "2026-06-08T00:09:23Z",
+  "winner_type": "Team",
+  "modified_at": "2026-06-08T02:10:49Z",
+  "tournament": {
+    "id": 21162,
+    "name": "Playoffs",
+    "type": "online",
+    "country": "BR",
+    "begin_at": "2026-06-07T16:00:00Z",
+    "detailed_stats": true,
+    "end_at": "2026-06-14T16:00:00Z",
+    "winner_id": null,
+    "winner_type": "Team",
+    "slug": "league-of-legends-esports-world-cup-south-america-latam-qualifier-2026-playoffs",
+    "serie_id": 10666,
+    "modified_at": "2026-06-07T17:22:55Z",
+    "league_id": 5262,
+    "prizepool": null,
+    "tier": "b",
+    "has_bracket": true,
+    "region": "SA",
+    "live_supported": false
+  },
+  "league_id": 5262,
+  "serie_id": 10666,
+  "original_scheduled_at": "2026-06-07T16:00:00Z",
+  "results": [
+    {
+      "team_id": 136357,
+      "score": 2
+    },
+    {
+      "team_id": 94,
+      "score": 1
+    }
+  ],
+  "slug": "fluxo-w7m-vs-pain-gaming-2026-06-07",
+  "winner_id": 136357,
+  "match_type": "best_of",
+  "videogame_version": {
+    "name": "16.11.1",
+    "current": true
+  },
+  "videogame_title": null,
+  "videogame": {
+    "id": 1,
+    "name": "LoL",
+    "slug": "league-of-legends"
+  },
+  "draw": false,
+  "status": "finished",
+  "game_advantage": null,
+  "opponents": [
+    {
+      "type": "Team",
+      "opponent": {
+        "id": 136357,
+        "name": "Fluxo W7M",
+        "location": "BR",
+        "slug": "fluxo-w7m",
+        "modified_at": "2026-06-07T17:22:55Z",
+        "acronym": "FXW7",
+        "image_url": "https://cdn-api.pandascore.co/images/team/image/136357/599px_fluxo_w7_m_dec_2025_allmode.png",
+        "dark_mode_image_url": null
+      }
+    },
+    {
+      "type": "Team",
+      "opponent": {
+        "id": 94,
+        "name": "paiN Gaming",
+        "location": "BR",
+        "slug": "pain-gaming",
+        "modified_at": "2026-06-07T17:22:53Z",
+        "acronym": "PNG",
+        "image_url": "https://cdn-api.pandascore.co/images/team/image/94/800px_pai_n_gaming_2017_lightmode.png",
+        "dark_mode_image_url": "https://cdn-api.pandascore.co/dark_images/team/dark_image/94/800px_pai_n_gaming_2017_darkmode.png"
+      }
+    }
+  ],
+  "number_of_games": 3,
+  "begin_at": "2026-06-07T21:36:23Z",
+  "serie": {
+    "id": 10666,
+    "name": "South America & LATAM Qualifier",
+    "year": 2026,
+    "begin_at": "2026-06-07T16:00:00Z",
+    "end_at": "2026-06-14T16:00:00Z",
+    "winner_id": null,
+    "winner_type": "Team",
+    "slug": "league-of-legends-esports-world-cup-south-america-latam-qualifier-2026",
+    "modified_at": "2026-06-02T12:58:42Z",
+    "league_id": 5262,
+    "season": null,
+    "full_name": "South America & LATAM Qualifier 2026"
+  },
+  "detailed_stats": true,
+  "rescheduled": true,
+  "id": 1520677,
+  "winner": {
+    "id": 136357,
+    "name": "Fluxo W7M",
+    "location": "BR",
+    "slug": "fluxo-w7m",
+    "modified_at": "2026-06-07T17:22:55Z",
+    "acronym": "FXW7",
+    "image_url": "https://cdn-api.pandascore.co/images/team/image/136357/599px_fluxo_w7_m_dec_2025_allmode.png",
+    "dark_mode_image_url": null
+  },
+  "name": "Upper Bracket Quarterfinal 2: FXW7 vs PNG",
+  "games": [
+    {
+      "complete": true,
+      "id": 279989,
+      "position": 1,
+      "status": "finished",
+      "length": 2418,
+      "finished": true,
+      "match_id": 1520677,
+      "begin_at": "2026-06-07T21:36:23Z",
+      "detailed_stats": true,
+      "end_at": "2026-06-07T22:18:01Z",
+      "forfeit": false,
+      "winner_type": "Team",
+      "winner": {
+        "id": 136357,
+        "type": "Team"
+      }
+    },
+    {
+      "complete": true,
+      "id": 279990,
+      "position": 2,
+      "status": "finished",
+      "length": 1887,
+      "finished": true,
+      "match_id": 1520677,
+      "begin_at": "2026-06-07T22:40:21Z",
+      "detailed_stats": true,
+      "end_at": "2026-06-07T23:19:23Z",
+      "forfeit": false,
+      "winner_type": "Team",
+      "winner": {
+        "id": 94,
+        "type": "Team"
+      }
+    },
+    {
+      "complete": true,
+      "id": 279991,
+      "position": 3,
+      "status": "finished",
+      "length": 1604,
+      "finished": true,
+      "match_id": 1520677,
+      "begin_at": "2026-06-07T23:36:07Z",
+      "detailed_stats": true,
+      "end_at": "2026-06-08T00:09:23Z",
+      "forfeit": false,
+      "winner_type": "Team",
+      "winner": {
+        "id": 136357,
+        "type": "Team"
+      }
+    }
+  ],
+  "scheduled_at": "2026-06-07T21:30:00Z",
+  "league": {
+    "id": 5262,
+    "name": "Esports World Cup",
+    "url": null,
+    "slug": "league-of-legends-esports-world-cup",
+    "modified_at": "2024-06-17T11:54:39Z",
+    "image_url": null
+  },
+  "streams_list": [
+    {
+      "main": true,
+      "language": "pt",
+      "embed_url": "https://player.twitch.tv/?channel=baiano",
+      "official": true,
+      "raw_url": "https://www.twitch.tv/baiano"
+    }
+  ],
+  "live": {
+    "supported": false,
+    "url": null,
+    "opens_at": null
+  },
+  "forfeit": false
+}

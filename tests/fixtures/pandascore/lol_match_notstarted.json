@@ -1,0 +1,231 @@
+{
+  "tournament_id": 20643,
+  "end_at": null,
+  "games": [
+    {
+      "complete": false,
+      "id": 278374,
+      "position": 1,
+      "status": "not_started",
+      "length": null,
+      "finished": false,
+      "begin_at": null,
+      "detailed_stats": true,
+      "end_at": null,
+      "forfeit": false,
+      "match_id": 1422520,
+      "winner_type": "Team",
+      "winner": {
+        "id": null,
+        "type": "Team"
+      }
+    },
+    {
+      "complete": false,
+      "id": 278375,
+      "position": 2,
+      "status": "not_started",
+      "length": null,
+      "finished": false,
+      "begin_at": null,
+      "detailed_stats": true,
+      "end_at": null,
+      "forfeit": false,
+      "match_id": 1422520,
+      "winner_type": "Team",
+      "winner": {
+        "id": null,
+        "type": "Team"
+      }
+    },
+    {
+      "complete": false,
+      "id": 278376,
+      "position": 3,
+      "status": "not_started",
+      "length": null,
+      "finished": false,
+      "begin_at": null,
+      "detailed_stats": true,
+      "end_at": null,
+      "forfeit": false,
+      "match_id": 1422520,
+      "winner_type": "Team",
+      "winner": {
+        "id": null,
+        "type": "Team"
+      }
+    },
+    {
+      "complete": false,
+      "id": 278377,
+      "position": 4,
+      "status": "not_started",
+      "length": null,
+      "finished": false,
+      "begin_at": null,
+      "detailed_stats": true,
+      "end_at": null,
+      "forfeit": false,
+      "match_id": 1422520,
+      "winner_type": "Team",
+      "winner": {
+        "id": null,
+        "type": "Team"
+      }
+    },
+    {
+      "complete": false,
+      "id": 278378,
+      "position": 5,
+      "status": "not_started",
+      "length": null,
+      "finished": false,
+      "begin_at": null,
+      "detailed_stats": true,
+      "end_at": null,
+      "forfeit": false,
+      "match_id": 1422520,
+      "winner_type": "Team",
+      "winner": {
+        "id": null,
+        "type": "Team"
+      }
+    }
+  ],
+  "winner_id": null,
+  "tournament": {
+    "id": 20643,
+    "name": "Playoffs",
+    "type": "offline",
+    "country": "CN",
+    "begin_at": "2026-05-28T09:00:00Z",
+    "detailed_stats": true,
+    "end_at": "2026-06-14T14:00:00Z",
+    "winner_id": null,
+    "winner_type": "Team",
+    "slug": "league-of-legends-lpl-china-split-2-2026-playoffs",
+    "serie_id": 10423,
+    "modified_at": "2026-05-29T16:30:56Z",
+    "league_id": 294,
+    "prizepool": "2,800,000 Chinese Yuan",
+    "tier": "a",
+    "has_bracket": true,
+    "region": "ASIA",
+    "live_supported": true
+  },
+  "videogame_title": null,
+  "winner": null,
+  "league_id": 294,
+  "detailed_stats": true,
+  "slug": "anyone-s-legend-vs-bilibili-gaming-2026-06-08",
+  "league": {
+    "id": 294,
+    "name": "LPL",
+    "url": "http://www.lolesports.com/en_US/lpl-china",
+    "slug": "league-of-legends-lpl-china",
+    "modified_at": "2020-06-02T08:53:12Z",
+    "image_url": "https://cdn-api.pandascore.co/images/league/image/294/lpl_2020-png"
+  },
+  "match_type": "best_of",
+  "scheduled_at": "2026-06-08T09:00:00Z",
+  "original_scheduled_at": "2026-06-12T09:00:00Z",
+  "videogame_version": null,
+  "live": {
+    "supported": true,
+    "url": "wss://live.pandascore.co/matches/1422520",
+    "opens_at": "2026-06-08T08:45:00.000000Z"
+  },
+  "results": [
+    {
+      "team_id": 129971,
+      "score": 0
+    },
+    {
+      "team_id": 1566,
+      "score": 0
+    }
+  ],
+  "serie_id": 10423,
+  "videogame": {
+    "id": 1,
+    "name": "LoL",
+    "slug": "league-of-legends"
+  },
+  "forfeit": false,
+  "status": "not_started",
+  "rescheduled": true,
+  "winner_type": "Team",
+  "begin_at": "2026-06-08T09:00:00Z",
+  "game_advantage": null,
+  "streams_list": [
+    {
+      "main": true,
+      "language": "zh",
+      "embed_url": "https://liveshare.huya.com/iframe/lpl",
+      "official": true,
+      "raw_url": "https://www.huya.com/lpl"
+    },
+    {
+      "main": false,
+      "language": "en",
+      "embed_url": "https://player.twitch.tv/?channel=lplenglish",
+      "official": false,
+      "raw_url": "https://www.twitch.tv/lplenglish"
+    },
+    {
+      "main": false,
+      "language": "zh",
+      "embed_url": "https://www.bilibili.com/blackboard/live/live-activity-player.html?cid=6",
+      "official": false,
+      "raw_url": "https://live.bilibili.com/6"
+    }
+  ],
+  "draw": false,
+  "id": 1422520,
+  "serie": {
+    "id": 10423,
+    "name": "",
+    "year": 2026,
+    "begin_at": "2026-04-04T07:00:00Z",
+    "end_at": "2026-06-14T14:00:00Z",
+    "winner_id": null,
+    "winner_type": "Team",
+    "slug": "league-of-legends-lpl-china-split-2-2026",
+    "modified_at": "2026-03-29T10:03:16Z",
+    "league_id": 294,
+    "season": "Split 2",
+    "full_name": "Split 2 2026"
+  },
+  "name": "Lower bracket semifinal: AL vs BLG",
+  "number_of_games": 5,
+  "modified_at": "2026-06-07T14:03:16Z",
+  "opponents": [
+    {
+      "type": "Team",
+      "opponent": {
+        "id": 129971,
+        "name": "Anyone's Legend",
+        "location": "CN",
+        "slug": "anyone-s-legend",
+        "modified_at": "2026-05-25T04:07:09Z",
+        "acronym": "AL",
+        "image_url": "https://cdn-api.pandascore.co/images/team/image/129971/1083px_anyone_s_legend_full_lightmode.png",
+        "dark_mode_image_url": "https://cdn-api.pandascore.co/dark_images/team/dark_image/129971/1083px_anyone_s_legend_full_darkmode.png"
+      }
+    },
+    {
+      "type": "Team",
+      "opponent": {
+        "id": 1566,
+        "name": "Bilibili Gaming",
+        "location": "CN",
+        "slug": "bilibili-gaming",
+        "modified_at": "2026-05-25T04:07:06Z",
+        "acronym": "BLG",
+        "image_url": "https://cdn-api.pandascore.co/images/team/image/1566/qw_yi_qu_j.png",
+        "dark_mode_image_url": null
+      }
+    }
+  ]
+}

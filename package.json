@@ -1,0 +1,22 @@
+{
+  "name": "esports-tracker",
+  "version": "0.0.1",
+  "description": "Unofficial cross-game esports tracker with spoiler protection — Chrome extension (MV3)",
+  "type": "module",
+  "scripts": {
+    "dev": "wxt",
+    "build": "wxt build",
+    "zip": "wxt zip",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
+    "compile": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@types/chrome": "^0.0.317",
+    "@vitest/coverage-v8": "^4.1.8",
+    "typescript": "^6.0.3",
+    "vitest": "^4.1.8",
+    "wxt": "^0.20.26"
+  }
+}
