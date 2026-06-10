@@ -1,12 +1,21 @@
 import { defineBackground } from 'wxt/utils/define-background';
 import { PandaScoreSource } from '../core/datasource/PandaScoreSource';
-import { getFollowConfig, setCachedMatches } from '../core/storage';
+import { computeNotifications, pruneSentKeys } from '../core/notifier';
+import {
+  getCachedMatches,
+  getFollowConfig,
+  getNotificationPrefs,
+  setCachedMatches,
+} from '../core/storage';
+import { nowUtcIso } from '../core/time';
 import { refreshMatches, type RefreshDeps } from '../background';
+import { getSentSet, saveSentSet } from '../background/sentStore';
 
 const REFRESH_ALARM_NAME = 'refreshMatches';
 const REFRESH_PERIOD_MINUTES = 10;
-// Popup asks the service worker to freshen data when it opens.
+// Popup/options ask the service worker to freshen data when they open/change.
 const MESSAGE_REFRESH = 'refresh';
+const NOTIFICATION_ICON = 'notification-icon.png';
 
 /**
  * Reads the PandaScore token from the build-time env. WXT (via Vite) only exposes
@@ -33,25 +42,73 @@ async function runRefresh(): Promise<void> {
   await refreshMatches(buildRefreshDeps());
 }
 
+/**
+ * Computes and fires due notifications, then persists the updated, pruned sent-set.
+ * Runs on the cached matches, so it works even when a refresh was skipped (e.g. no
+ * token) as long as there is cached data.
+ */
+async function runNotifications(): Promise<void> {
+  const [matches, prefs] = await Promise.all([getCachedMatches(), getNotificationPrefs()]);
+  const sent = await getSentSet();
+
+  const plan = computeNotifications(matches, prefs, nowUtcIso(), sent);
+
+  for (const pending of plan.toFire) {
+    chrome.notifications.create(pending.key, {
+      type: 'basic',
+      iconUrl: chrome.runtime.getURL(`/${NOTIFICATION_ICON}`),
+      title: pending.title,
+      message: pending.message,
+    });
+    sent.add(pending.key);
+  }
+  for (const key of plan.toMarkSent) {
+    sent.add(key);
+  }
+
+  // Prune against the current cache so the sent-set cannot grow without bound.
+  await saveSentSet(pruneSentKeys(sent, matches));
+}
+
+async function tick(): Promise<void> {
+  await runRefresh();
+  await runNotifications();
+}
+
 export default defineBackground(() => {
-  // Periodic refresh. MV3 service workers sleep, so we drive polling via an alarm
-  // and reason in time windows rather than assuming the worker stays alive.
+  // Periodic work. MV3 service workers sleep, so we drive polling via an alarm and
+  // reason in time windows rather than assuming the worker stays alive.
   chrome.alarms.create(REFRESH_ALARM_NAME, { periodInMinutes: REFRESH_PERIOD_MINUTES });
 
   chrome.alarms.onAlarm.addListener(alarm => {
     if (alarm.name === REFRESH_ALARM_NAME) {
-      void runRefresh();
+      void tick();
     }
   });
 
-  // Refresh once when the extension is installed/updated and when the browser starts.
-  chrome.runtime.onInstalled.addListener(() => void runRefresh());
-  chrome.runtime.onStartup.addListener(() => void runRefresh());
+  // Run once when installed/updated and when the browser starts.
+  chrome.runtime.onInstalled.addListener(() => void tick());
+  chrome.runtime.onStartup.addListener(() => void tick());
 
-  // Refresh when the popup opens so data freshens while the user is viewing it.
+  // Run when the popup/options request a refresh.
   chrome.runtime.onMessage.addListener(message => {
     if (message?.type === MESSAGE_REFRESH) {
-      void runRefresh();
+      void tick();
     }
   });
+
+  // Optional, simple: clicking a notification opens the match's official stream.
+  chrome.notifications.onClicked.addListener(notificationId => {
+    void openStreamForNotification(notificationId);
+  });
 });
+
+async function openStreamForNotification(notificationId: string): Promise<void> {
+  const matchId = notificationId.slice(0, notificationId.lastIndexOf(':'));
+  const matches = await getCachedMatches();
+  const match = matches.find(m => m.id === matchId);
+  if (match?.officialStreamUrl) {
+    await chrome.tabs.create({ url: match.officialStreamUrl });
+  }
+  chrome.notifications.clear(notificationId);
+}
