@@ -1,20 +1,12 @@
 {
+  "extends": "./.wxt/tsconfig.json",
   "compilerOptions": {
-    "target": "ES2022",
-    "lib": ["ES2022"],
-    "module": "ESNext",
-    "moduleResolution": "bundler",
-    "resolveJsonModule": true,
-    "strict": true,
-    "noImplicitAny": true,
+    "jsx": "react-jsx",
+    "jsxImportSource": "preact",
+    "types": ["chrome"],
     "noImplicitReturns": true,
     "noFallthroughCasesInSwitch": true,
     "noUncheckedIndexedAccess": true,
-    "exactOptionalPropertyTypes": true,
-    "allowImportingTsExtensions": true,
-    "noEmit": true,
-    "skipLibCheck": true,
-    "types": ["chrome"]
-  },
-  "include": ["src", "tests", "wxt.config.ts", "vitest.config.ts"]
+    "exactOptionalPropertyTypes": true
+  }
 }

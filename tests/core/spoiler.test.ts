@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { Match, MatchStatus } from '../../src/core/models';
-import type { StorageArea } from '../../src/core/storage';
+import type { StorageArea } from '../../src/core/storage-area';
 import {
   DEFAULT_SPOILER_PREFS,
   getRevealedSet,

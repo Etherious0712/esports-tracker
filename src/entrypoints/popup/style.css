@@ -1,0 +1,173 @@
+/* Popup styling. British spelling in our authored class names and comments. */
+
+:root {
+  color-scheme: light dark;
+  --colour-bg: #11131a;
+  --colour-surface: #1b1e29;
+  --colour-text: #e7e9f0;
+  --colour-muted: #9aa0b4;
+  --colour-accent: #6c8cff;
+}
+
+body {
+  margin: 0;
+  font-family: system-ui, sans-serif;
+  background: var(--colour-bg);
+  color: var(--colour-text);
+}
+
+.popup {
+  width: 360px;
+  padding: 12px 14px;
+  box-sizing: border-box;
+}
+
+.popup__header {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  border-bottom: 1px solid #2a2e3d;
+  padding-bottom: 8px;
+  margin-bottom: 8px;
+}
+
+.popup__title {
+  font-size: 16px;
+  margin: 0;
+}
+
+.popup__unofficial {
+  font-size: 11px;
+  color: var(--colour-muted);
+  font-weight: 400;
+}
+
+.popup__updated {
+  margin: 0;
+  font-size: 11px;
+  color: var(--colour-muted);
+}
+
+.popup__settings {
+  font-size: 12px;
+  color: var(--colour-accent);
+  text-decoration: none;
+}
+
+.popup__empty,
+.popup__loading {
+  font-size: 13px;
+  color: var(--colour-muted);
+}
+
+.match-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.match-row {
+  background: var(--colour-surface);
+  border-radius: 8px;
+  padding: 8px 10px;
+}
+
+.match-row__meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 11px;
+  color: var(--colour-muted);
+  margin-bottom: 4px;
+}
+
+.match-row__teams {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.team {
+  font-size: 13px;
+}
+
+.team__acronym {
+  color: var(--colour-muted);
+  font-size: 11px;
+}
+
+.match-row__time {
+  display: block;
+  margin-top: 4px;
+  font-size: 11px;
+  color: var(--colour-muted);
+}
+
+.badge {
+  padding: 1px 6px;
+  border-radius: 999px;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.badge--running {
+  background: #3a1d1d;
+  color: #ff8a8a;
+}
+
+.badge--finished {
+  background: #1d3a24;
+  color: #7fe39a;
+}
+
+.badge--notStarted {
+  background: #1d2a3a;
+  color: #8ab6ff;
+}
+
+.badge--cancelled {
+  background: #2a2a2a;
+  color: var(--colour-muted);
+}
+
+.score {
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.score--vs {
+  color: var(--colour-muted);
+  font-weight: 400;
+}
+
+.score--masked {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.score__placeholder {
+  letter-spacing: 0.1em;
+  color: var(--colour-muted);
+}
+
+.reveal-button {
+  font-size: 11px;
+  border: 1px solid var(--colour-accent);
+  background: transparent;
+  color: var(--colour-accent);
+  border-radius: 6px;
+  padding: 2px 6px;
+  cursor: pointer;
+}
+
+.reveal-button:hover {
+  background: var(--colour-accent);
+  color: #0b0d13;
+}

@@ -1,5 +1,5 @@
 import type { Match } from './models';
-import { localArea, type StorageArea } from './storage';
+import { localArea, type StorageArea } from './storage-area';
 
 // ── Preferences (persisted via chrome.storage.sync — a user preference) ───────
 
