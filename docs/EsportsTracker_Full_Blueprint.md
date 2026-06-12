@@ -1,47 +1,58 @@
-# EsportsTracker — Full Version Blueprint (Roadmap)
+# EsportsTracker — Full Blueprint (Roadmap & Monetisation)
 
-> This is the target shape and evolution path after the MVP is validated. It is **not meant to be built all at once** — following the "validate free first, invest once the bar is met" philosophy, features are sliced into threshold-gated phases.
+> The target shape and growth path AFTER the MVP is validated. **Updated to reflect the pivot to a
+> reminder/tracker product** (page-level spoiler protection removed).
 > Companion document: `EsportsTracker_MVP_Blueprint.md` (build this first).
+> Built in threshold-gated phases — "validate free first, invest once the bar is met".
 
 ---
 
-## 0. Extra problems the full version solves
+## 0. Product north star (post-pivot)
 
-After the MVP validates "people want an in-browser spoiler-free tracker", the full version addresses three things the MVP deliberately avoided:
+A spoiler-free way to keep up with your favourite esports teams across major games — reminders for
+upcoming and finished matches, plus a clean view of your teams' schedule and results. The thing that
+makes it different from a generic results feed is that **it doesn't spoil you by default**.
 
-1. **Scale**: once users grow, direct client→API calls hit rate limits and expose the API key → need a **caching proxy**.
-2. **Monetisation**: as a second income stream → need a **free/Pro split + payments**.
-3. **Stickiness & coverage**: multi-game, multi-browser, cross-device sync, stronger spoiler protection → turn it from "usable" into "indispensable".
+The full version deepens three things the MVP keeps shallow:
+1. **Reach & richness of the tracking surface** (a real dashboard, more games).
+2. **Reliability at scale** (a caching proxy so growth doesn't hit API limits or expose the key).
+3. **Monetisation** (a free tier that earns trust, an optional Pro tier later).
+
+> Explicitly NOT returning to: page-level masking / multi-site content scripts (removed in the pivot).
+> If a fundamentally better cross-platform spoiler approach is found, it would be evaluated as new
+> scope, not assumed.
 
 ---
 
-## 1. Target architecture overview (with backend)
+## 1. Target architecture (with backend, when justified)
 
 ```
 ┌──────────── Browser extension (Chrome / Edge / Firefox) ─────────────┐
-│  Popup  │  New Tab board  │  Options  │  Service Worker (sched/notify)  │
-└──────┬───────────┬────────────┬──────────────┬──────────────────────┘
-       │ read/write │            │ prefs         │ HTTPS (with anon token)
-       ▼            ▼            ▼              ▼
-  chrome.storage.local/sync                ┌──────────────────────────┐
-       │ (local cache + prefs)              │   Caching proxy           │
-       │                                    │   (Cloudflare Worker,     │
-       │ Pro cross-device sync ────────────►│    free tier)             │
-       │                                    │  • single upstream fetch  │
-       │                                    │  • normalise + cache (KV) │
-       │                                    │  • hides all API keys     │
-       │                                    │  • stale-while-revalidate │
-       │                                    └──────────┬───────────────┘
-       │                                               │ HTTPS
-       ▼                                               ▼
-  ┌─────────────────┐         ┌───────────────────────────────────────┐
-  │  ExtensionPay   │         │  Upstream sources (multi-source, fail- │
-  │ (free/Pro auth) │         │  over): PandaScore free · Liquipedia   │
-  └─────────────────┘         │  API · (optional) Riot official data   │
-                              └───────────────────────────────────────┘
+│  Popup  │  Dashboard (new surface)  │  Options  │  Service Worker      │
+└──────┬───────────────┬───────────────────┬───────────────┬───────────┘
+       │ read/write     │                   │ prefs/follow   │ HTTPS (anon token)
+       ▼                ▼                   ▼               ▼
+  chrome.storage (cache + prefs + followedTeams + reveal + sent)
+       │                                            ┌──────────────────────────┐
+       │ Pro: cross-device sync ───────────────────►│  Caching proxy            │
+       │                                            │  (Cloudflare Worker, free) │
+       │                                            │  • single upstream fetch   │
+       │                                            │  • normalise + cache (KV)  │
+       │                                            │  • hides the API key       │
+       │                                            └──────────┬────────────────┘
+       │  ┌─────────────────┐                                  │ HTTPS
+       │  │  ExtensionPay   │  (free/Pro)                      ▼
+       │  └─────────────────┘                       ┌────────────────────┐
+       │                                            │  PandaScore (free)  │
+       │                                            │  + schedules/results│
+       └────────────────────────────────────────── │  + teams search     │
+                                                    └────────────────────┘
 ```
 
-**Key architectural shift**: the MVP is "direct client calls"; the full version routes all data through a **caching proxy** — it fetches from upstream every few minutes, normalises, and caches, and all users read from it. This one layer solves rate limits, API-key exposure, and multi-source aggregation at once, and a Cloudflare Worker's free tier is usually still free at 5k+ users.
+**Architectural shift from MVP**: the MVP calls PandaScore directly from the service worker (API key
+in the client, fine at tiny scale). The full version routes through a **caching proxy** — one fetch
+serves all users, the key stays server-side, and rate limits are absorbed. A Cloudflare Worker's free
+tier typically still covers this at 5k+ users.
 
 ---
 
@@ -49,171 +60,97 @@ After the MVP validates "people want an in-browser spoiler-free tracker", the fu
 
 | Module | Full-version capability | Delta vs MVP |
 |---|---|---|
-| Game coverage | LoL / CS2 / Dota2 / Valorant etc., several mainstream titles | MVP: 1–2 only |
-| Data sources | multi-source + failover (one down → use another) | MVP: single direct source |
-| Spoiler protection | score + bracket progression + bestOf + VOD-duration hints; per-competition settings; "catch-up mode" | MVP: score mask only |
-| Notifications | rules engine: per-team/per-competition, lead time, quiet hours, spoiler-safe wording | MVP: global pre/post only |
-| Views | full new-tab board + standings/brackets + calendar export (.ics) | MVP: popup list only |
-| Sync | Pro: cross-device sync of prefs and "watched" state | MVP: chrome.storage.sync only |
-| Platforms | Chrome + Edge + Firefox | MVP: Chrome only |
-| Localisation | EN / ZH to start (you are bilingual) | MVP: single language |
-| Monetisation | ExtensionPay free/Pro split | MVP: none |
-| Observability | privacy-friendly active/retention analytics | MVP: store stats only |
+| Games | More titles (Dota 2, Valorant, …) as their PandaScore structure is verified | MVP: 1–2 |
+| Tracking surface | A **dashboard**: followed teams' matches grouped by status (upcoming/live/finished), then game, then tournament, then time | MVP: single popup list |
+| Reminders | Rules: lead-time, quiet hours, per-team/per-competition toggles | MVP: global pre/post |
+| Spoiler-free | Keep the default-on popup masking + spoiler-safe notifications; optionally a "catch-up" ordered watch queue | MVP: popup masking + safe wording |
+| Reliability | Caching proxy (key hidden, rate limits absorbed, multi-source ready) | MVP: direct client calls |
+| Sync | Pro: cross-device sync of follows + reveal state | MVP: chrome.storage.sync for prefs only |
+| Platforms | Chrome + Edge + Firefox | MVP: Chrome |
+| Localisation | EN / ZH | MVP: EN |
+| Branding | Real icon + store assets | MVP: placeholder icon |
+| Monetisation | ExtensionPay free/Pro | MVP: none |
+| Observability | Privacy-friendly active/retention analytics | MVP: store stats |
+
+> Note: the "dashboard with grouping" is the feature the user sketched during the MVP (a richer view
+> than the popup). It lives here, gated behind MVP validation.
 
 ---
 
-## 3. Core component blueprints (new/upgraded in the full version)
+## 3. Monetisation (validate free first, Pro later)
 
-### Blueprint: caching proxy (Cloudflare Worker)
-```
-Purpose:    Fetch from multiple upstreams, normalise, cache, and serve all clients; hide API keys; absorb rate limits.
-Inputs:     GET /matches?games=lol,csgo&since=... (client sends an anon/Pro token)
-Outputs:    normalised Match[] JSON; with Cache-Control / ETag
-Components: routing; upstream adapters (PandaScore/Liquipedia/...); normalisation; KV cache read/write; auth middleware
-Data flow:  client → Worker (KV hit?) → hit returns; miss/expired → fetch upstream → normalise → write KV → return
-Edge cases: upstream rate-limit/outage → return stale cache + mark stale; multi-game → concurrent fetch + merge;
-            KV write race → last-write-wins acceptable; abusive traffic → rate limit + token check
-Test plan:  cache hit/miss paths; returns stale on upstream failure; multi-source merge correct; auth rejects token-less requests
-```
-> Why not in the MVP: the MVP's purpose is to validate demand, fastest with zero infra. But **this is the full version's foundation**, and the proper fix for getting the API key out of the client.
-
-### Blueprint: Pro auth & monetisation (ExtensionPay)
-```
-Purpose:    Distinguish free/Pro, unlock advanced features; serve as a second income stream.
-Inputs:     the user's ExtensionPay login state
-Outputs:    isPro: boolean → gates features and proxy-side quota
-Components: extpay client wrapper; featureGate(feature, isPro); proxy-side validation
-Data flow:  extension start → extpay.getUser() → cache isPro → UI & proxy open/limit accordingly
-Edge cases: offline → use last cached Pro state (grace period); refund/expiry → degrade gracefully to free;
-            free-tier boundary (e.g. follow cap) → clear prompt, not silent failure
-Test plan:  free user correctly limited; Pro unlocks; offline grace; expiry degrades without losing user data
-```
-**Tiering suggestion** (price per earlier research; esports audience skews young and price-sensitive, so favour low price or one-time):
-- Free: follow cap (e.g. 3 teams), basic pre/post reminders, single device.
-- Pro: unlimited follows, cross-device sync, notification rules engine, calendar export, themes, bracket spoiler protection.
-
-### Blueprint: notification rules engine
-```
-Purpose:    Let users finely control when, why, and what kind of notification they get.
-Inputs:     rule set (per-team/competition, lead time, quiet hours, spoiler-safe wording), Match[]
-Outputs:    notifications to fire (filtered by rules, deduped, spoiler-safe)
-Components: RuleSet model; evaluate(rules, matches, now, sent); buildMessage()
-Data flow:  SW alarm → fetch cache → evaluate(rules) → filter sent → fire → record
-Edge cases: pre-match alert during quiet hours → defer or suppress (per rule); rule conflicts → clear precedence;
-            MV3 SW sleep → still judge by time window
-Test plan:  each rule alone/combined; quiet-hours suppression correct; spoiler-safe wording; idempotent dedup
-```
-
-### Blueprint: cross-device sync (Pro)
-```
-Purpose:    Keep a Pro user's follow list and "watched" state consistent across devices/browsers.
-Inputs:     user id (from ExtensionPay), local prefs and watched state
-Outputs:    merged prefs/state (cloud authoritative + most recent local change)
-Components: sync endpoint (Worker + KV/D1); conflict-merge strategy; local change queue
-Data flow:  local change → enqueue → push when online → pull remote → merge → write back local
-Edge cases: offline edits → queue; conflict → later timestamp wins ("watched" takes the union, safer);
-            free users → not enabled, chrome.storage.sync only
-Test plan:  two-device merge; sync after reconnect; "watched" union doesn't regress; free users don't trigger it
-```
+- **Free tier earns trust and a user base.** The whole MVP stays free; the product proves retention
+  before any paid infrastructure.
+- **Pro tier (later, only after retention is proven)** via ExtensionPay — candidate Pro features:
+  unlimited followed teams, cross-device sync, notification rules (quiet hours / per-team lead times),
+  the dashboard, themes. Pricing kept low/one-time given a young, price-sensitive audience.
+- **Payments tooling**: ExtensionPay (no backend needed for gating); a merchant-of-record option
+  (e.g. Dodo Payments) if cross-border VAT/GST handling is wanted.
+- **Cost discipline**: stay inside free tiers (Worker/KV, ExtensionPay, PandaScore free) as long as
+  possible; the deep per-game PandaScore data is expensive and a tracker doesn't need it — don't buy it.
 
 ---
 
-## 4. Full-version spoiler protection (upgrade focus)
-
-This is the product moat; the full version makes it airtight:
-- **Score masking** (already in MVP).
-- **Bracket / progression**: unwatched rounds don't reveal who advanced.
-- **Weak signals**: when guarding, hide/de-emphasise `bestOf`, match duration, "deciding game" hints.
-- **Granular settings**: turn off spoiler protection for a specific competition (one you don't mind being spoiled).
-- **Catch-up mode**: one click into a "chronological, fully guarded" watch queue; reveal one as you watch one.
-- **Page-level spoiler protection** started in the MVP (a few sites + text matching); the full version expands site coverage, improves match accuracy, and ensures the mask doesn't conflict or lag the page. Permissions remain a **per-site whitelist; never `<all_urls>`**.
-
----
-
-## 5. Multi-source data strategy
-
-| Source | Role | Note |
-|---|---|---|
-| PandaScore free plan | Primary: schedules/results | Note it is **billed per game**; deep data/odds are expensive — use only the free schedule/result part |
-| Liquipedia API | Supplementary: events/teams/brackets | **Must respect attribution and rate limits**; community data, use politely |
-| Riot official esports data (optional) | LoL-specific enhancement | Only if there's a genuinely available official route |
-
-The proxy normalises multiple sources into the same `Match` model and does **failover**: when the primary fails, switch to a supplementary source — slightly stale data beats a blank screen.
-
----
-
-## 6. Cross-browser
-
-- WXT produces Chrome / Edge / Firefox builds from one codebase.
-- **Firefox is worth doing**: it's growing fast and retains more permissive extension capabilities; as a second landing spot it reduces single-platform (Google) policy risk.
-- Note each store's review and privacy-disclosure requirements differ slightly.
-
----
-
-## 7. Observability (the basis for investment decisions)
-
-Use a **privacy-friendly** approach (e.g. self-hosted Plausible, or minimal anonymous events) to collect only what's needed to decide:
-- install → finished-onboarding conversion (the onboarding funnel).
-- **WAU / DAU, retention curve** (the real signal for whether to keep investing, not install count).
-- spoiler feature usage rate, Pro conversion rate.
-- store rating trend (directly affects search ranking).
-
-Disclose analytics honestly in the privacy policy, and give users an opt-out where possible.
-
----
-
-## 8. Testing & CI (full version)
-
-- **Unit/integration**: Vitest, covering proxy normalisation, rules engine, sync merge, spoiler state machine.
-- **E2E**: Playwright (you already have the playwright skill) for popup/options key flows and pre-submission regression.
-- **CI/CD**: GitHub Actions → lint + test + build → produce three-store packages → semi-automated submission.
-- **Contract testing**: contract-test upstream APIs with recorded samples so upstream field changes are caught early.
-
----
-
-## 9. Phased roadmap (threshold-gated, echoing the "invest only at 5k" philosophy)
+## 4. Phased roadmap (threshold-gated)
 
 ```
-Phase 1 — MVP (see MVP blueprint)         Gate to next phase: weekly-active/retention/rating meet the bar
-   single game · direct client calls · score spoiler mask · local storage
+Phase 1 — MVP (shipped/validated): followed teams + desktop reminders + default-on popup spoiler
+          masking. Gate to next phase: weekly-active / retention / store rating meet a set bar.
 
-Phase 2 — Foundation hardening (once users grow)
-   introduce the caching proxy (fix key exposure + rate limits) · add 2nd–3rd game · privacy-friendly analytics
+Phase 2 — Tracking surface: add the grouped dashboard; add a real icon; privacy-friendly analytics.
 
-Phase 3 — Monetisation (after retention is proven)
-   ExtensionPay free/Pro split · notification rules engine · new-tab board
+Phase 3 — Reliability & reach: caching proxy (hide key, absorb limits); add a 3rd/4th game.
 
-Phase 4 — Stickiness & coverage
-   cross-device sync (Pro) · full spoiler protection (brackets/catch-up) · Firefox/Edge · EN/ZH localisation
+Phase 4 — Monetisation: ExtensionPay free/Pro split; notification rules; cross-device sync (Pro).
 
-Phase 5 — Optimisation & scale
-   multi-source failover · performance/cost tuning · data-driven feature iteration
+Phase 5 — Breadth: Firefox/Edge; EN/ZH localisation; data-driven iteration.
 ```
 
-Before crossing each phase, revisit the analytics to confirm it's worth investing — this is how the "meet the bar before upgrading tools/investing" strategy is operationalised.
+Each phase is entered only when the analytics justify the investment — the operational form of
+"validate free first".
 
 ---
 
-## 10. Cost & "when do you actually pay"
+## 5. Reliability & data strategy
 
-- Phases 1–3 generally stay within free tiers (Worker, KV, GitHub Actions, ExtensionPay, PandaScore free plan).
-- **Where cost can actually appear**: Worker/KV exceeding the free tier (at high activity); enabling cloud sync on a paid D1/external-DB tier; ever wanting PandaScore's deep data (**billed per game, expensive**, and a tracker usually doesn't need it — don't reach for it lightly).
-- Principle: **let free tiers + caching design carry you as late as possible**; when you do pay, first confirm it's driven by healthy active users, not by an inefficient design.
+- **Caching proxy (Phase 3)**: a Cloudflare Worker fetches from PandaScore on a schedule, normalises,
+  caches in KV, and serves all clients. Fixes the MVP's two known limitations at once: the client-side
+  API key and per-client rate limits.
+- **Data source**: PandaScore free plan (schedules/results/teams search). Avoid the paid per-game deep
+  data — expensive and unnecessary for a reminder/tracker.
+- **Multi-game**: verify each new game's API structure (status/results/number_of_games shapes) before
+  enabling it — the same "verify the external assumption first" discipline that caught the
+  `results`-always-present trap.
+
+---
+
+## 6. Cost & "when do you actually pay"
+
+- Phases 1–4 generally stay within free tiers (Worker, KV, GitHub Actions, ExtensionPay, PandaScore free).
+- Costs appear only if Worker/KV exceed the free tier at high activity, or if cross-device sync uses a
+  paid datastore. The expensive PandaScore deep-data tier is deliberately avoided.
+- Principle: let free tiers + caching carry you as late as possible; when you pay, confirm it's driven
+  by healthy active users, not inefficient design.
 
 ---
 
 ## Closing
 
-✅ **This blueprint delivers**: the full version's target architecture (with caching proxy), feature module list, blueprints for 4 new/upgraded components (proxy / monetisation / rules engine / sync), multi-source strategy, cross-browser, observability, testing & CI, and a **threshold-gated phased roadmap**.
+✅ **This roadmap describes growth for the reminder/tracker product**: a richer dashboard, a caching
+proxy for scale, more games and platforms, localisation, and an optional Pro tier — all gated behind
+MVP validation, free-first.
 
-📋 **Suggested next steps**:
-1. Build and ship the MVP first — every full-version step should be triggered by real data from the MVP; don't lay foundations early.
-2. Once the bar is met, the first thing is to stand up the caching proxy (fixing key exposure and rate limits together).
-3. When needed, I can drill into any single module: e.g. a Worker code skeleton for the proxy, ExtensionPay integration, or the state design for bracket spoiler protection.
+📋 **Next steps**:
+1. Ship and personally validate the MVP first; let real retention data trigger each phase.
+2. The first post-validation build is the grouped dashboard (the user's own sketch) — a richer surface
+   than the popup, still free.
+3. Stand up the caching proxy before user growth strains the free API limits.
 
-⚠️ **Known limitations & assumptions**:
-- Once the full version introduces a backend (proxy/sync), you take on a **privacy policy and data-handling responsibility** (even with minimal data); disclose honestly.
-- PandaScore is billed per game — for multiple games use only its **free schedule/result** part; don't reach for the paid deep-data tier lightly.
-- Community sources like Liquipedia **must respect attribution and rate limits**; use politely or risk being blocked.
-- Throughout, hold to **minimal permissions (per-site whitelist, never `<all_urls>`) + content scripts only read the DOM to mask + "Unofficial" labelling + no official logos** — the baseline for trust and compliance.
-- The phase ordering is a suggestion; real priorities should be set by the MVP's retention and feedback data.
+⚠️ **Known trade-offs & notes**:
+- The extension's distinctiveness now rests on being **spoiler-free by default**, not on page-level
+  masking — protect that default as features are added.
+- PandaScore is billed per game; use only the free schedule/result/teams-search data.
+- Introducing a backend (proxy/sync) brings a privacy-policy/data-handling responsibility — disclose honestly.
+- Page-level spoiler protection is preserved in git history; revisit only if a genuinely better
+  cross-platform approach is found, as new scope.
+- Phase ordering is a guide; real priorities follow the MVP's retention and feedback data.
