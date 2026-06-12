@@ -2,12 +2,15 @@ import { describe, expect, it, vi } from 'vitest';
 import {
   mapStatus,
   normaliseMatch,
+  normaliseTeam,
   PandaScoreSource,
   pickOfficialStream,
 } from '../../../src/core/datasource/PandaScoreSource';
+import { AuthError } from '../../../src/core/datasource/IDataSource';
 import { hasResult } from '../../../src/core/models';
 import finishedFixture from '../../fixtures/pandascore/lol_match_finished.json';
 import notStartedFixture from '../../fixtures/pandascore/lol_match_notstarted.json';
+import teamsSearchFixture from '../../fixtures/pandascore/csgo_teams_search.json';
 
 // ── mapStatus ─────────────────────────────────────────────────────────────────
 
@@ -333,5 +336,84 @@ describe('PandaScoreSource.fetchMatches', () => {
     for (let i = 1; i < result.length; i++) {
       expect(result[i - 1]!.beginAtUtc <= result[i]!.beginAtUtc).toBe(true);
     }
+  });
+});
+
+// ── normaliseTeam ─────────────────────────────────────────────────────────────
+
+describe('normaliseTeam', () => {
+  it('NormaliseTeam_KeepsOnlyIdNameAcronym', () => {
+    const team = normaliseTeam(teamsSearchFixture[0]);
+    expect(team).toStrictEqual({ id: '3455', name: 'Vitality', acronym: 'VIT' });
+    // Exactly these keys — no players[], image_url, location, slug, current_videogame.
+    expect(Object.keys(team).sort()).toEqual(['acronym', 'id', 'name']);
+  });
+
+  it('NormaliseTeam_IdCoercedToString', () => {
+    expect(normaliseTeam(teamsSearchFixture[1]).id).toBe('138618');
+  });
+});
+
+// ── PandaScoreSource.searchTeams ──────────────────────────────────────────────
+
+describe('PandaScoreSource.searchTeams', () => {
+  it('SearchTeams_Normalises_KeepsOnlyIdNameAcronym', async () => {
+    const mockFetch = vi.fn().mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: async () => teamsSearchFixture,
+    });
+    const source = new PandaScoreSource('token', mockFetch as typeof fetch);
+
+    const teams = await source.searchTeams('csgo', 'vitality');
+
+    expect(teams).toStrictEqual([
+      { id: '3455', name: 'Vitality', acronym: 'VIT' },
+      { id: '138618', name: 'Vitality Academy', acronym: 'VIT.A' },
+    ]);
+  });
+
+  it('SearchTeams_EmptyQuery_NoRequest', async () => {
+    const mockFetch = vi.fn();
+    const source = new PandaScoreSource('token', mockFetch as typeof fetch);
+
+    expect(await source.searchTeams('csgo', '   ')).toEqual([]);
+    expect(mockFetch).not.toHaveBeenCalled();
+  });
+
+  it('SearchTeams_EncodesQuery', async () => {
+    const mockFetch = vi.fn().mockResolvedValue({ ok: true, status: 200, json: async () => [] });
+    const source = new PandaScoreSource('token', mockFetch as typeof fetch);
+
+    await source.searchTeams('csgo', 'team vitality');
+
+    const [url] = mockFetch.mock.calls[0] as [string, RequestInit];
+    expect(url).toContain('/csgo/teams?');
+    expect(url).toContain('search%5Bname%5D=team%20vitality');
+    expect(url).toContain('per_page=10');
+  });
+
+  it('SearchTeams_PassesBearerToken', async () => {
+    const mockFetch = vi.fn().mockResolvedValue({ ok: true, status: 200, json: async () => [] });
+    const source = new PandaScoreSource('secret', mockFetch as typeof fetch);
+
+    await source.searchTeams('csgo', 'vita');
+
+    const [, init] = mockFetch.mock.calls[0] as [string, RequestInit];
+    expect((init.headers as Record<string, string>)['Authorization']).toBe('Bearer secret');
+  });
+
+  it('SearchTeams_AuthError_Maps', async () => {
+    const mockFetch = vi.fn().mockResolvedValue({ ok: false, status: 401, json: async () => ({}) });
+    const source = new PandaScoreSource('bad', mockFetch as typeof fetch);
+
+    await expect(source.searchTeams('csgo', 'vita')).rejects.toBeInstanceOf(AuthError);
+  });
+
+  it('SearchTeams_NoMatches_ReturnsEmpty', async () => {
+    const mockFetch = vi.fn().mockResolvedValue({ ok: true, status: 200, json: async () => [] });
+    const source = new PandaScoreSource('token', mockFetch as typeof fetch);
+
+    expect(await source.searchTeams('csgo', 'zzzznomatch')).toEqual([]);
   });
 });

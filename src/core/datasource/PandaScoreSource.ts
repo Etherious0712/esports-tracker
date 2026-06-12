@@ -51,6 +51,7 @@ interface RawPandaScoreMatch {
 
 const PANDASCORE_BASE_URL = 'https://api.pandascore.co';
 const MATCH_RESULTS_PER_PAGE = 50;
+const TEAM_SEARCH_PER_PAGE = 10;
 
 const GAME_ENDPOINT: Record<GameId, string> = {
   lol: 'lol',
@@ -106,6 +107,15 @@ export function pickOfficialStream(
  * The `game` param is taken from the endpoint that returned this record since
  * videogame.slug values differ from our GameId labels.
  */
+/**
+ * Normalises a raw PandaScore team into our internal Team, keeping ONLY id, name,
+ * and acronym. Everything else (players[], image_url, dark_mode_image_url, location,
+ * current_videogame, slug) is intentionally dropped — noise plus a logo/trademark concern.
+ */
+export function normaliseTeam(raw: unknown): Team {
+  return buildTeam(raw as RawTeam);
+}
+
 export function normaliseMatch(raw: unknown, game: GameId): Match | null {
   // Cast is intentional — raw comes directly from the PandaScore JSON response
   // and its shape is validated by the fixture-based integration tests.
@@ -195,10 +205,28 @@ export class PandaScoreSource implements IDataSource {
     return filtered.sort((a, b) => a.beginAtUtc.localeCompare(b.beginAtUtc));
   }
 
-  private async fetchMatchPage(game: GameId, type: MatchEndpointType): Promise<Match[]> {
-    const slug = GAME_ENDPOINT[game];
-    const url = `${PANDASCORE_BASE_URL}/${slug}/matches/${type}?per_page=${MATCH_RESULTS_PER_PAGE}&page=1`;
+  /**
+   * Searches teams by name for a game (PandaScore name search), returning a small
+   * normalised list for the team picker. Blank query → [] with no request.
+   * Auth/rate-limit/other failures surface as the usual error types for the caller
+   * to show a soft error.
+   */
+  async searchTeams(game: GameId, query: string): Promise<Team[]> {
+    const trimmed = query.trim();
+    if (trimmed === '') return [];
 
+    const slug = GAME_ENDPOINT[game];
+    // The [ ] in search[name] must be percent-encoded; the value is encoded separately.
+    const url =
+      `${PANDASCORE_BASE_URL}/${slug}/teams` +
+      `?search%5Bname%5D=${encodeURIComponent(trimmed)}&per_page=${TEAM_SEARCH_PER_PAGE}`;
+
+    const rawItems = await this.getJson(url);
+    return rawItems.map(normaliseTeam);
+  }
+
+  /** Authenticated GET returning the parsed JSON array, with shared error mapping. */
+  private async getJson(url: string): Promise<unknown[]> {
     const response = await this.fetchFn(url, {
       headers: { Authorization: `Bearer ${this.apiToken}` },
     });
@@ -213,7 +241,14 @@ export class PandaScoreSource implements IDataSource {
       throw new DataSourceError(`PandaScore request failed: HTTP ${response.status}`);
     }
 
-    const rawItems = (await response.json()) as unknown[];
+    return (await response.json()) as unknown[];
+  }
+
+  private async fetchMatchPage(game: GameId, type: MatchEndpointType): Promise<Match[]> {
+    const slug = GAME_ENDPOINT[game];
+    const url = `${PANDASCORE_BASE_URL}/${slug}/matches/${type}?per_page=${MATCH_RESULTS_PER_PAGE}&page=1`;
+
+    const rawItems = await this.getJson(url);
     return rawItems
       .map(item => normaliseMatch(item, game))
       .filter((m): m is Match => m !== null);

@@ -1,0 +1,28 @@
+[
+  {
+    "id": 3455,
+    "name": "Vitality",
+    "acronym": "VIT",
+    "location": "FR",
+    "slug": "vitality-cs-go",
+    "image_url": "https://cdn-api.pandascore.co/images/team/image/3455/team_vitalitylogo_square.png",
+    "dark_mode_image_url": null,
+    "current_videogame": { "id": 3, "name": "Counter-Strike", "slug": "cs-go" },
+    "players": [
+      { "id": 27031, "name": "ZywOo", "nationality": "FR", "image_url": null }
+    ]
+  },
+  {
+    "id": 138618,
+    "name": "Vitality Academy",
+    "acronym": "VIT.A",
+    "location": "",
+    "slug": "vitality-academy",
+    "image_url": "https://cdn-api.pandascore.co/images/team/image/138618/foo.png",
+    "dark_mode_image_url": null,
+    "current_videogame": { "id": 3, "name": "Counter-Strike", "slug": "cs-go" },
+    "players": [
+      { "id": 51702, "name": "Dafra1D", "nationality": "UA", "image_url": null }
+    ]
+  }
+]

@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { cleanup, fireEvent, render, waitFor } from '@testing-library/preact';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import type { FollowConfig, NotificationPrefs } from '../../src/core/models';
+import type { FollowConfig, NotificationPrefs, Team } from '../../src/core/models';
 import type { SpoilerPrefs } from '../../src/core/spoiler';
 
 // Mock the storage module so the settings page persists through vi.fn()s rather
@@ -10,12 +10,16 @@ const getFollowConfig = vi.fn<() => Promise<FollowConfig>>();
 const setFollowConfig = vi.fn<(c: FollowConfig) => Promise<void>>();
 const getSpoilerPrefs = vi.fn<() => Promise<SpoilerPrefs>>();
 const setSpoilerPrefs = vi.fn<(p: SpoilerPrefs) => Promise<void>>();
+const getFollowedTeams = vi.fn<() => Promise<Team[]>>();
 
 vi.mock('../../src/core/storage', () => ({
   getFollowConfig,
   setFollowConfig,
   getSpoilerPrefs,
   setSpoilerPrefs,
+  getFollowedTeams,
+  followTeam: vi.fn(),
+  unfollowTeam: vi.fn(),
   // Present in the real module; unused here but kept so the shape matches.
   getNotificationPrefs: vi.fn<() => Promise<NotificationPrefs>>(),
   setNotificationPrefs: vi.fn(),
@@ -34,6 +38,7 @@ beforeEach(() => {
   setFollowConfig.mockResolvedValue();
   getSpoilerPrefs.mockResolvedValue({ hideRunning: false });
   setSpoilerPrefs.mockResolvedValue();
+  getFollowedTeams.mockResolvedValue([]);
 });
 
 afterEach(() => cleanup());
