@@ -14,10 +14,6 @@ export default defineConfig({
     description:
       'Track esports matches across games and protect yourself from spoilers.',
     permissions: ['storage', 'alarms', 'notifications'],
-    host_permissions: [
-      'https://api.pandascore.co/*',
-      '*://*.youtube.com/*',
-      '*://liquipedia.net/*',
-    ],
+    host_permissions: ['https://api.pandascore.co/*'],
   },
 });
