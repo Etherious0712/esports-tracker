@@ -13,6 +13,7 @@ import { MatchList } from './components/MatchList';
 
 const MESSAGE_REFRESH = 'refresh';
 const OPTIONS_PAGE = '/options.html';
+const DASHBOARD_PAGE = '/dashboard.html';
 
 type LoadState = 'loading' | 'ready';
 
@@ -53,6 +54,7 @@ export function App() {
   }
 
   const settingsUrl = chrome.runtime.getURL(OPTIONS_PAGE);
+  const dashboardUrl = chrome.runtime.getURL(DASHBOARD_PAGE);
 
   return (
     <main class="popup">
@@ -63,6 +65,9 @@ export function App() {
         {lastUpdated !== null && (
           <p class="popup__updated">Last updated {formatLocalDateTime(lastUpdated)}</p>
         )}
+        <a class="popup__dashboard" href={dashboardUrl} target="_blank" rel="noreferrer">
+          ⤢ Expand full view
+        </a>
         <a class="popup__settings" href={settingsUrl} target="_blank" rel="noreferrer">
           ⚙ Settings
         </a>

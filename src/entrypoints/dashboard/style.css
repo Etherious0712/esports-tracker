@@ -1,0 +1,199 @@
+/* Dashboard (full-page) styling. British spelling in our authored class names.
+   The score/reveal rules mirror the popup's, since the SpoilerGuard component is
+   shared but the popup's stylesheet isn't loaded on this page. */
+
+:root {
+  color-scheme: light dark;
+  --colour-bg: #11131a;
+  --colour-surface: #1b1e29;
+  --colour-text: #e7e9f0;
+  --colour-muted: #9aa0b4;
+  --colour-accent: #6c8cff;
+}
+
+body {
+  margin: 0;
+  font-family: system-ui, sans-serif;
+  background: var(--colour-bg);
+  color: var(--colour-text);
+}
+
+.dash {
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 20px 18px 48px;
+}
+
+.dash__header {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  border-bottom: 1px solid #2a2e3d;
+  padding-bottom: 10px;
+  margin-bottom: 16px;
+}
+
+.dash__title {
+  font-size: 20px;
+  margin: 0;
+}
+
+.dash__unofficial {
+  font-size: 12px;
+  color: var(--colour-muted);
+  font-weight: 400;
+}
+
+.dash__updated {
+  margin: 0;
+  font-size: 12px;
+  color: var(--colour-muted);
+}
+
+.dash__settings {
+  font-size: 13px;
+  color: var(--colour-accent);
+  text-decoration: none;
+}
+
+.dash__empty,
+.dash__loading {
+  font-size: 14px;
+  color: var(--colour-muted);
+}
+
+.dash-section {
+  margin-bottom: 28px;
+}
+
+.dash-section__heading {
+  font-size: 16px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--colour-accent);
+  border-bottom: 1px solid #2a2e3d;
+  padding-bottom: 4px;
+}
+
+.dash-game__name {
+  font-size: 15px;
+  margin: 14px 0 6px;
+}
+
+.dash-tournament {
+  margin: 0 0 12px;
+}
+
+.dash-tournament__name {
+  font-size: 13px;
+  color: var(--colour-muted);
+  margin: 8px 0 4px;
+}
+
+.dash-tournament__matches {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.dash-row {
+  background: var(--colour-surface);
+  border-radius: 8px;
+  padding: 8px 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.dash-row__teams {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.dash-row__meta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 11px;
+  color: var(--colour-muted);
+  white-space: nowrap;
+}
+
+.dash-row__stream {
+  color: var(--colour-accent);
+  text-decoration: none;
+}
+
+.team {
+  font-size: 13px;
+}
+
+.team__acronym {
+  color: var(--colour-muted);
+  font-size: 11px;
+}
+
+/* SpoilerGuard visuals live in ../shared/spoiler-guard.css (imported by main.tsx). */
+
+/* Two-column layout: left nav sidebar + content area. */
+.dash__body {
+  display: flex;
+  gap: 20px;
+  align-items: flex-start;
+}
+
+.dash__nav {
+  flex: 0 0 160px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  position: sticky;
+  top: 16px;
+}
+
+.dash__nav-item {
+  text-align: left;
+  font-size: 13px;
+  padding: 8px 10px;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--colour-text);
+  cursor: pointer;
+}
+
+.dash__nav-item:hover {
+  background: var(--colour-surface);
+}
+
+.dash__nav-item--active {
+  background: var(--colour-surface);
+  border-color: var(--colour-accent);
+  color: var(--colour-accent);
+}
+
+.dash__content {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.dash__empty-line {
+  font-size: 13px;
+  color: var(--colour-muted);
+}
+
+@media (max-width: 560px) {
+  .dash__body {
+    flex-direction: column;
+  }
+  .dash__nav {
+    position: static;
+    flex-direction: row;
+    flex-basis: auto;
+  }
+}
