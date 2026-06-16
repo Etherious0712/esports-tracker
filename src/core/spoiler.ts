@@ -4,11 +4,14 @@ import { localArea, type StorageArea } from './storage-area';
 // ── Preferences (persisted via chrome.storage.sync — a user preference) ───────
 
 export interface SpoilerPrefs {
+  /** Master switch for spoiler-free mode. When false, nothing is ever masked. Default true. */
+  enabled: boolean;
   /** When true, in-progress (running) matches are also guarded. Default false. */
   hideRunning: boolean;
 }
 
 export const DEFAULT_SPOILER_PREFS: SpoilerPrefs = {
+  enabled: true,
   hideRunning: false,
 };
 
@@ -21,7 +24,7 @@ export interface SpoilerDecision {
 
 /**
  * Decides whether a match's score/winner must be hidden. Pure: no storage, no DOM.
- * Both the popup and the page-level content script call this per match.
+ * Called by the popup per match.
  *
  * The status switch is intentionally exhaustive with no `default`: if MatchStatus
  * ever gains a new value, the type checker flags this function so the new case is
@@ -35,6 +38,7 @@ export function getSpoilerDecision(
   const shown: SpoilerDecision = { hideScore: false, hideWinner: false };
   const hidden: SpoilerDecision = { hideScore: true, hideWinner: true };
 
+  if (!prefs.enabled) return shown;
   if (revealed) return shown;
 
   switch (match.status) {

@@ -47,6 +47,7 @@ interface AppProps {
 
 export function App({ searchTeams = defaultSearchTeams }: AppProps = {}) {
   const [follow, setFollow] = useState<FollowConfig>(DEFAULT_FOLLOW_CONFIG);
+  const [spoilerEnabled, setSpoilerEnabled] = useState(DEFAULT_SPOILER_PREFS.enabled);
   const [hideRunning, setHideRunning] = useState(DEFAULT_SPOILER_PREFS.hideRunning);
   const [loaded, setLoaded] = useState(false);
 
@@ -63,6 +64,7 @@ export function App({ searchTeams = defaultSearchTeams }: AppProps = {}) {
         getFollowedTeams(),
       ]);
       setFollow(loadedFollow);
+      setSpoilerEnabled(prefs.enabled);
       setHideRunning(prefs.hideRunning);
       setFollowed(teams);
       setLoaded(true);
@@ -109,9 +111,15 @@ export function App({ searchTeams = defaultSearchTeams }: AppProps = {}) {
     requestRefresh();
   }
 
+  // Persist the full SpoilerPrefs on every change so toggling one field never drops the other.
+  async function handleSpoilerEnabledToggle(checked: boolean): Promise<void> {
+    setSpoilerEnabled(checked);
+    await setSpoilerPrefs({ enabled: checked, hideRunning });
+  }
+
   async function handleHideRunningToggle(checked: boolean): Promise<void> {
     setHideRunning(checked);
-    await setSpoilerPrefs({ hideRunning: checked });
+    await setSpoilerPrefs({ enabled: spoilerEnabled, hideRunning: checked });
   }
 
   async function handleFollow(team: Team): Promise<void> {
@@ -221,14 +229,28 @@ export function App({ searchTeams = defaultSearchTeams }: AppProps = {}) {
         <label class="options__row">
           <input
             type="checkbox"
+            checked={spoilerEnabled}
+            onChange={event =>
+              void handleSpoilerEnabledToggle((event.currentTarget as HTMLInputElement).checked)
+            }
+          />
+          Spoiler-free mode
+        </label>
+        <label class="options__row">
+          <input
+            type="checkbox"
             checked={hideRunning}
+            disabled={!spoilerEnabled}
             onChange={event =>
               void handleHideRunningToggle((event.currentTarget as HTMLInputElement).checked)
             }
           />
           Guard in-progress matches too
         </label>
-        <p class="options__hint">Finished matches are always guarded by default.</p>
+        <p class="options__hint">
+          With spoiler-free mode on, finished matches are masked until you reveal them. Turn it off
+          to always show scores.
+        </p>
       </section>
     </main>
   );

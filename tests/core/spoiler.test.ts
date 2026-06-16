@@ -56,11 +56,28 @@ const failingStore: StorageArea = {
   },
 };
 
-const HIDE_RUNNING: SpoilerPrefs = { hideRunning: true };
+const HIDE_RUNNING: SpoilerPrefs = { enabled: true, hideRunning: true };
+const DISABLED: SpoilerPrefs = { enabled: false, hideRunning: true };
 
 // ── getSpoilerDecision ────────────────────────────────────────────────────────
 
 describe('getSpoilerDecision', () => {
+  it('DefaultSpoilerPrefs_EnabledByDefault', () => {
+    expect(DEFAULT_SPOILER_PREFS.enabled).toBe(true);
+  });
+
+  it('GetSpoilerDecision_Disabled_FinishedShows', () => {
+    // Master switch off → never mask, even a finished match.
+    const decision = getSpoilerDecision(makeMatch('finished'), false, DISABLED);
+    expect(decision).toStrictEqual({ hideScore: false, hideWinner: false });
+  });
+
+  it('GetSpoilerDecision_Disabled_RunningWithHideRunningShows', () => {
+    // Disabled overrides hideRunning too.
+    const decision = getSpoilerDecision(makeMatch('running'), false, DISABLED);
+    expect(decision).toStrictEqual({ hideScore: false, hideWinner: false });
+  });
+
   it('GetSpoilerDecision_FinishedNotRevealed_Hides', () => {
     const decision = getSpoilerDecision(makeMatch('finished'), false, DEFAULT_SPOILER_PREFS);
     expect(decision).toStrictEqual({ hideScore: true, hideWinner: true });

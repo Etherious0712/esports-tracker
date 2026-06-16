@@ -36,7 +36,7 @@ beforeEach(() => {
   (globalThis as unknown as { chrome: unknown }).chrome = { runtime: { sendMessage } };
   getFollowConfig.mockResolvedValue({ games: [], teamIds: [], competitionIds: [] });
   setFollowConfig.mockResolvedValue();
-  getSpoilerPrefs.mockResolvedValue({ hideRunning: false });
+  getSpoilerPrefs.mockResolvedValue({ enabled: true, hideRunning: false });
   setSpoilerPrefs.mockResolvedValue();
   getFollowedTeams.mockResolvedValue([]);
 });
@@ -63,12 +63,13 @@ describe('Settings page', () => {
     fireEvent.click(getByLabelText(/guard in-progress matches too/i));
 
     await waitFor(() => expect(setSpoilerPrefs).toHaveBeenCalledTimes(1));
-    expect(setSpoilerPrefs).toHaveBeenCalledWith({ hideRunning: true });
+    // Writes the FULL prefs so the enabled flag isn't dropped.
+    expect(setSpoilerPrefs).toHaveBeenCalledWith({ enabled: true, hideRunning: true });
   });
 
   it('Settings_LoadsExistingValues_OnOpen', async () => {
     getFollowConfig.mockResolvedValue({ games: ['lol'], teamIds: [], competitionIds: [] });
-    getSpoilerPrefs.mockResolvedValue({ hideRunning: true });
+    getSpoilerPrefs.mockResolvedValue({ enabled: true, hideRunning: true });
 
     const { getByLabelText } = render(<App />);
 

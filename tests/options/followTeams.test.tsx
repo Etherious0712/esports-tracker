@@ -32,7 +32,7 @@ beforeEach(() => {
   vi.clearAllMocks();
   (globalThis as unknown as { chrome: unknown }).chrome = { runtime: { sendMessage } };
   getFollowConfig.mockResolvedValue({ games: ['csgo'], teamIds: [], competitionIds: [] });
-  getSpoilerPrefs.mockResolvedValue({ hideRunning: false });
+  getSpoilerPrefs.mockResolvedValue({ enabled: true, hideRunning: false });
   getFollowedTeams.mockResolvedValue([]);
   followTeam.mockResolvedValue();
   unfollowTeam.mockResolvedValue();

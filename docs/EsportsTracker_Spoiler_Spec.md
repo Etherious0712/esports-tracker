@@ -1,23 +1,22 @@
 # EsportsTracker — Spoiler Engine Spec (core/spoiler.ts)
 
-> Implementation spec for the spoiler state machine. Claude Code implements against this.
-> Depends on the data layer (`MatchStatus`, `Match`, `hasResult`) already shipped.
-> Pure logic only — no DOM, no extension UI. Both the popup and the page-level content
-> script reuse this module, so it must stay framework-free and unit-testable.
-> British English throughout; naming consistent with `models.ts`.
+> Spec for the spoiler state machine in the reminder product. Pure logic in `core/spoiler.ts`;
+> the popup consumes it. **Updated for the pivot**: page-level content script removed; spoiler
+> protection now lives only in the popup list + notification wording, and is governed by a
+> default-on master switch. British English throughout.
 
 ---
 
-## 1. Product decision (locked)
+## 1. Product decisions (locked)
 
-- **Finished matches are guarded by default** — their score/winner is hidden until revealed.
-- **Running (in-progress) matches are NOT guarded by default.** Live scores show normally.
-- A user setting **`hideRunning`** (default **false**) lets users opt in to guarding running
-  matches too. Exposed as a toggle in the extension settings.
-- `notStarted` and `cancelled` are never guarded (nothing to spoil).
-
-Rationale: don't get in the way of people following a live broadcast, while letting VOD-watchers
-who want full protection opt in.
+- **Spoiler protection is OPTIONAL, default ON.** A master switch `SpoilerPrefs.enabled` (default
+  **true**) governs all in-popup masking. Off → scores are always shown (no masking at all).
+- With protection on:
+  - **Finished** matches are masked until revealed.
+  - **Running** matches are masked only if `hideRunning` is on (default off).
+  - **notStarted / cancelled** are never masked (no result to spoil).
+- Default-on is deliberate: not spoiling the user is the product's differentiator and should be the
+  first-run behaviour. Users who prefer to see scores immediately can switch it off.
 
 ---
 
@@ -25,11 +24,14 @@ who want full protection opt in.
 
 ```ts
 export interface SpoilerPrefs {
+  /** Master switch. When false, no scores are ever masked. Default true. */
+  enabled: boolean;
   /** When true, in-progress (running) matches are also guarded. Default false. */
   hideRunning: boolean;
 }
 
 export const DEFAULT_SPOILER_PREFS: SpoilerPrefs = {
+  enabled: true,
   hideRunning: false,
 };
 
@@ -39,27 +41,23 @@ export interface SpoilerDecision {
 }
 ```
 
-> `SpoilerPrefs` is persisted via `chrome.storage.sync` (a user preference, syncs across the
-> user's own devices). Reveal state (§4) is persisted via `chrome.storage.local` (per-device cache).
+> `SpoilerPrefs` persists via `chrome.storage.sync` (a user preference). Existing
+> `getSpoilerPrefs`/`setSpoilerPrefs` already back it; the new `enabled` field defaults to true via
+> `DEFAULT_SPOILER_PREFS` for users who have older stored prefs without the field.
 
 ---
 
 ## 3. The pure decision function
 
-### Blueprint: getSpoilerDecision
 ```
-Purpose:    Decide whether a match's score/winner must be hidden. Pure function, no I/O.
-Inputs:     match: Match; revealed: boolean (has the user already revealed THIS match);
-            prefs: SpoilerPrefs
-Outputs:    SpoilerDecision { hideScore, hideWinner }
-Components: getSpoilerDecision(match, revealed, prefs)
-Data flow:  caller loads revealed state + prefs → calls this per match → uses result to mask/show
-Edge cases: revealed === true always wins → show everything;
-            finished + not revealed → hide;
-            running + not revealed + prefs.hideRunning → hide;
-            running + not revealed + !prefs.hideRunning → show (DEFAULT);
-            notStarted / cancelled → show (no result to spoil), regardless of prefs
-Test plan:  see §5
+getSpoilerDecision(match, revealed, prefs) → SpoilerDecision
+Order of checks:
+  1. if !prefs.enabled  → return shown   (master switch off: never mask)
+  2. if revealed         → return shown
+  3. switch(status):
+       finished                 → hidden
+       running                  → prefs.hideRunning ? hidden : shown
+       notStarted | cancelled   → shown
 ```
 
 Reference implementation:
@@ -72,6 +70,7 @@ export function getSpoilerDecision(
   const shown: SpoilerDecision = { hideScore: false, hideWinner: false };
   const hidden: SpoilerDecision = { hideScore: true, hideWinner: true };
 
+  if (!prefs.enabled) return shown;   // master switch off → never mask
   if (revealed) return shown;
 
   switch (match.status) {
@@ -85,79 +84,72 @@ export function getSpoilerDecision(
   }
 }
 ```
-> Note: the `switch` is exhaustive over `MatchStatus`. Keep it exhaustive (no `default`) so that
-> if `MatchStatus` ever gains a new value, the type checker flags this function — a deliberate
-> safety net, per strict-mode discipline.
+> Keep the status `switch` exhaustive (no `default`) so a new `MatchStatus` value is caught at compile
+> time. Remove the now-stale comment that says the page-level content script also calls this — only
+> the popup does now.
 
 ---
 
-## 4. Reveal state (persistence)
+## 4. Reveal state
 
-"Reveal once, revealed everywhere." Reveal state is shared between the popup and every content
-script via `chrome.storage.local`, keyed by the authoritative `matchId` from the data layer.
+Unchanged by this update. Reveal state is a single `chrome.storage.local` key holding the array of
+revealed match ids; `getRevealedSet` / `reveal` / `isRevealed` as already implemented (fail-safe to
+empty set on read error). Stores only ids, never scores.
 
-### Blueprint: reveal-state store
-```
-Purpose:    Persist and query which matches the user has chosen to reveal.
-Inputs:     matchId: string (reveal / isRevealed); none (getRevealedSet)
-Outputs:    reveal → Promise<void>; getRevealedSet → Promise<Set<string>>
-Components: reveal(matchId); getRevealedSet(); isRevealed(matchId) [convenience]
-Data flow:  reveal() adds id to the stored set; readers load the set once and pass the boolean
-            into getSpoilerDecision per match
-Edge cases: revealing an already-revealed id is a no-op (idempotent);
-            unknown id in isRevealed → false;
-            never store scores here — only the set of revealed match ids;
-            storage failure on read → treat as empty set (fail safe: guard rather than leak)
-Test plan:  see §5
-```
-
-Design notes:
-- Store a **single key** holding the set of revealed ids (e.g. `spoiler:revealed` → string[]),
-  not one key per match — this lets a content script scanning a page load the whole set in one
-  read instead of N reads (performance, per the content-script blueprint).
-- Readers should call `getRevealedSet()` once, then check membership locally while iterating
-  matches; do **not** call `isRevealed()` in a tight loop (it would re-read storage each time).
-- Reveal state is intentionally `local` (per-device) in the MVP. Cross-device sync of reveal
-  state is a Full-blueprint (Pro) item — do not build it now.
+> Note: when `enabled` is false, masking is off so reveal is moot; reveal state can remain stored and
+> simply isn't consulted. No migration needed.
 
 ---
 
-## 5. Test plan
+## 5. Settings UI
+
+In the options page, alongside the existing `hideRunning` toggle, add a master toggle:
+- **"Spoiler-free mode"** (or similar) bound to `SpoilerPrefs.enabled`, default on.
+- When `enabled` is off, the `hideRunning` toggle is irrelevant — disable/grey it out (it has no
+  effect while the master switch is off), or show it as inactive. Keep both persisted via
+  `setSpoilerPrefs`.
+- Persist immediately on change, consistent with the other settings.
+
+> `SpoilerGuard.tsx` needs NO change — it only reads `decision.hideScore`. The master switch is
+> handled upstream in `getSpoilerDecision`, so turning it off makes every decision "shown" and the
+> guard renders real scores automatically.
+
+---
+
+## 6. Test plan (Vitest)
 
 | Scenario | Expectation |
 |---|---|
-| `GetSpoilerDecision_FinishedNotRevealed_Hides` | finished + revealed=false → hide both |
-| `GetSpoilerDecision_FinishedRevealed_Shows` | finished + revealed=true → show both |
-| `GetSpoilerDecision_RunningDefault_Shows` | running + revealed=false + hideRunning=false → show |
-| `GetSpoilerDecision_RunningOptIn_Hides` | running + revealed=false + hideRunning=true → hide |
-| `GetSpoilerDecision_RunningRevealed_Shows` | running + revealed=true → show (even if hideRunning=true) |
-| `GetSpoilerDecision_NotStarted_Shows` | notStarted → show, regardless of prefs |
-| `GetSpoilerDecision_Cancelled_Shows` | cancelled → show, regardless of prefs |
-| `Reveal_NewId_AddsToSet` | reveal(id) then getRevealedSet() contains id |
-| `Reveal_ExistingId_Idempotent` | revealing twice → set still has one entry, no error |
-| `IsRevealed_UnknownId_False` | isRevealed(unknown) → false |
-| `GetRevealedSet_StorageFailure_ReturnsEmpty` | storage read throws → empty set (fail safe) |
+| `Disabled_FinishedNotRevealed_Shows` | enabled=false, finished → shown (master switch wins) |
+| `Disabled_RunningWithHideRunning_Shows` | enabled=false, running, hideRunning=true → shown |
+| `Enabled_FinishedNotRevealed_Hides` | enabled=true, finished, not revealed → hidden |
+| `Enabled_Revealed_Shows` | enabled=true, revealed → shown |
+| `Enabled_RunningDefault_Shows` | enabled=true, running, hideRunning=false → shown |
+| `Enabled_RunningOptIn_Hides` | enabled=true, running, hideRunning=true → hidden |
+| `Enabled_NotStarted_Shows` / `Enabled_Cancelled_Shows` | shown regardless |
+| default prefs | `DEFAULT_SPOILER_PREFS.enabled === true` |
 
-> Use a mocked storage (inject the storage wrapper, like fetch was injected into PandaScoreSource)
-> so the reveal-state tests run without a real `chrome.storage`.
+Plus the existing reveal-state tests stay green. Update any existing test that constructs
+`SpoilerPrefs` to include the new `enabled` field (default true).
 
 ---
 
 ## Closing
 
-✅ **This spec delivers**: the locked product decision (running not guarded by default, opt-in
-toggle), `SpoilerPrefs` + defaults, the pure `getSpoilerDecision` function with an exhaustive
-status switch, the shared reveal-state store design, and a full test plan.
+✅ **This spec delivers**: the optional, default-on master switch (`enabled`), the updated
+`getSpoilerDecision` ordering (master switch checked first), the settings toggle, and tests — with no
+change needed to `SpoilerGuard`.
 
 📋 **Next steps**:
-1. Put this spec in `docs/`.
-2. Have Claude Code implement `src/core/spoiler.ts` per §2–§4 with Vitest tests per §5,
-   injecting a mockable storage wrapper. No UI, no DOM, no content script yet. No commit.
-3. After this lands, the next pieces are the popup match list + in-extension `SpoilerGuard`
-   (which consume this module), then the matcher and page-level content script.
+1. Put this spec in `docs/` (overwrite the old Spoiler Spec).
+2. Claude Code: add `enabled` to `SpoilerPrefs`/defaults, update `getSpoilerDecision`, add the settings
+   toggle, update tests, and remove the stale page-level comment. No commit.
+3. Manual check: toggle the master switch off → finished-match scores show immediately in the popup;
+   toggle on → they mask again.
 
 ⚠️ **Watch**:
-- Keep the status `switch` exhaustive (no `default`) so new statuses are caught by the type checker.
-- Reveal state stores only match ids — never scores.
-- Read the revealed set once per render/scan; don't call `isRevealed` in a loop.
-- `hideRunning` lives in `storage.sync`; reveal state lives in `storage.local`. Don't mix them.
+- Check `!enabled` FIRST in `getSpoilerDecision` (before revealed/status).
+- Default `enabled` to true so existing stored prefs (without the field) stay spoiler-free.
+- Keep the status switch exhaustive (no default).
+- `SpoilerGuard` is unchanged — don't touch it.
+- Remove the stale "page-level content script" comment.
