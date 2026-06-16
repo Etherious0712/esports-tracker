@@ -1,5 +1,7 @@
 # EsportsTracker — Popup & In-Extension Spoiler Spec
-
+> ⚠️ Written before the pivot. The popup/SpoilerGuard/settings described here ship as-is,
+> but the "page-level spoiler protection (content scripts)" referenced as a future slice was
+> removed — the product is now a reminder/tracker. See EsportsTracker_MVP_Blueprint.md.
 > Implementation spec for the first user-visible slice: background fetch+cache, the popup
 > match list, the in-extension `SpoilerGuard`, and a settings page. Claude Code implements
 > against this. Builds on the shipped data layer + spoiler engine.
