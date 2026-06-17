@@ -250,7 +250,7 @@ export function App({ searchTeams = defaultSearchTeams }: AppProps = {}) {
         </label>
         <p class="options__hint">
           With spoiler-free mode on, finished matches are masked until you reveal them. Turn it off
-          to always show scores.
+          to always show scores in the popup and notifications.
         </p>
       </section>
     </main>

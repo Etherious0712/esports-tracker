@@ -3,6 +3,7 @@ import type { Match, MatchStatus, NotificationPrefs } from '../../src/core/model
 import {
   buildMessage,
   computeNotifications,
+  gateNotificationPrefs,
   pruneSentKeys,
 } from '../../src/core/notifier';
 
@@ -163,6 +164,48 @@ describe('buildMessage', () => {
     expect(title).toBe('Match starting soon');
     expect(message).toContain('15');
     expect(message).toContain('Team Alpha vs Team Beta');
+  });
+});
+
+// ── gateNotificationPrefs (notification-wording gate) ─────────────────────────
+
+describe('gateNotificationPrefs', () => {
+  it('GateNotificationPrefs_SpoilerEnabledSafeWording_Unchanged', () => {
+    const prefs: NotificationPrefs = { ...PREFS, spoilerSafeWording: true };
+    expect(gateNotificationPrefs(prefs, true)).toEqual(prefs);
+  });
+
+  it('GateNotificationPrefs_SpoilerDisabledSafeWording_ForcesScore', () => {
+    const prefs: NotificationPrefs = { ...PREFS, spoilerSafeWording: true };
+    const gated = gateNotificationPrefs(prefs, false);
+    expect(gated.spoilerSafeWording).toBe(false);
+    // The END message now carries the score, governed by the single visible toggle.
+    expect(buildMessage(finished(), 'end', gated).message).toContain('2 - 1');
+  });
+
+  it('GateNotificationPrefs_SpoilerEnabledNoSafeWording_Unchanged', () => {
+    const prefs: NotificationPrefs = { ...PREFS, spoilerSafeWording: false };
+    expect(gateNotificationPrefs(prefs, true)).toEqual(prefs);
+  });
+
+  it('GateNotificationPrefs_LeavesOtherFieldsIntact', () => {
+    const prefs: NotificationPrefs = {
+      enabled: true,
+      leadMinutes: 15,
+      notifyOnEnd: true,
+      spoilerSafeWording: true,
+    };
+    const gated = gateNotificationPrefs(prefs, false);
+    expect(gated.enabled).toBe(prefs.enabled);
+    expect(gated.notifyOnEnd).toBe(prefs.notifyOnEnd);
+    expect(gated.leadMinutes).toBe(prefs.leadMinutes);
+  });
+
+  it('GateNotificationPrefs_PreMessageIdenticalRegardlessOfSpoiler', () => {
+    const prefs: NotificationPrefs = { ...PREFS, spoilerSafeWording: true };
+    const enabled = buildMessage(makeMatch(), 'pre', gateNotificationPrefs(prefs, true));
+    const disabled = buildMessage(makeMatch(), 'pre', gateNotificationPrefs(prefs, false));
+    expect(disabled).toEqual(enabled);
   });
 });
 

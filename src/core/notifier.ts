@@ -146,6 +146,19 @@ export function computeNotifications(
 }
 
 /**
+ * Gates spoiler-safe wording behind the spoiler master switch. When spoiler-free
+ * mode is off, END notifications show the score even if spoilerSafeWording is true,
+ * so the single visible toggle governs both popup masking and notification wording.
+ * Apply at fire time (per alarm) so a mid-session toggle takes effect immediately.
+ */
+export function gateNotificationPrefs(
+  prefs: NotificationPrefs,
+  spoilerEnabled: boolean,
+): NotificationPrefs {
+  return spoilerEnabled ? prefs : { ...prefs, spoilerSafeWording: false };
+}
+
+/**
  * Drops sent keys whose match is no longer in the cache, so the sent-set cannot
  * grow without bound. Pure. Key format is `${matchId}:${kind}`; matchIds are
  * numeric strings (no colon), so splitting on the last colon is safe.

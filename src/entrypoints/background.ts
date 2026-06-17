@@ -1,10 +1,11 @@
 import { defineBackground } from 'wxt/utils/define-background';
 import { PandaScoreSource } from '../core/datasource/PandaScoreSource';
-import { computeNotifications, pruneSentKeys } from '../core/notifier';
+import { computeNotifications, gateNotificationPrefs, pruneSentKeys } from '../core/notifier';
 import {
   getCachedMatches,
   getFollowConfig,
   getNotificationPrefs,
+  getSpoilerPrefs,
   setCachedMatches,
 } from '../core/storage';
 import { nowUtcIso } from '../core/time';
@@ -48,10 +49,17 @@ async function runRefresh(): Promise<void> {
  * token) as long as there is cached data.
  */
 async function runNotifications(): Promise<void> {
-  const [matches, prefs] = await Promise.all([getCachedMatches(), getNotificationPrefs()]);
+  const [matches, notif, spoiler] = await Promise.all([
+    getCachedMatches(),
+    getNotificationPrefs(),
+    getSpoilerPrefs(),
+  ]);
   const sent = await getSentSet();
 
-  const plan = computeNotifications(matches, prefs, nowUtcIso(), sent);
+  // Fire-time read of the spoiler master switch so a mid-session toggle takes
+  // effect immediately: off → END notifications show the score.
+  const effective = gateNotificationPrefs(notif, spoiler.enabled);
+  const plan = computeNotifications(matches, effective, nowUtcIso(), sent);
 
   for (const pending of plan.toFire) {
     chrome.notifications.create(pending.key, {

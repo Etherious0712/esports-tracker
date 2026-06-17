@@ -1,9 +1,9 @@
 # EsportsTracker — Spoiler Engine Spec (core/spoiler.ts)
 
-> Spec for the spoiler state machine in the reminder product. Pure logic in `core/spoiler.ts`;
-> the popup consumes it. **Updated for the pivot**: page-level content script removed; spoiler
-> protection now lives only in the popup list + notification wording, and is governed by a
-> default-on master switch. British English throughout.
+> Spec for the spoiler state machine in the reminder product. Pure logic in `core/spoiler.ts`
+> (popup masking) plus the notification-wording gate in `core/notifier.ts` (§5.5). **Updated for the
+> pivot**: page-level content script removed; spoiler protection now lives only in the popup list +
+> notification wording, both governed by a single default-on master switch. British English throughout.
 
 ---
 
@@ -17,6 +17,11 @@
   - **notStarted / cancelled** are never masked (no result to spoil).
 - Default-on is deliberate: not spoiling the user is the product's differentiator and should be the
   first-run behaviour. Users who prefer to see scores immediately can switch it off.
+- **`enabled` is the single visible spoiler switch and governs BOTH surfaces**: the popup masking
+  (above) **and** the END-notification wording. When `enabled` is off, the post-match notification
+  shows the score directly; when on, it stays spoiler-safe ("VOD ready", no score/winner). This
+  avoids the confusing state where a user turns spoiler-free mode off, sees scores in the popup, but
+  still receives a vague "VOD ready" notification. See §5.5.
 
 ---
 
@@ -114,6 +119,56 @@ In the options page, alongside the existing `hideRunning` toggle, add a master t
 > handled upstream in `getSpoilerDecision`, so turning it off makes every decision "shown" and the
 > guard renders real scores automatically.
 
+> The options hint currently reads "Turn it off to always show scores." Update it to
+> "…always show scores in the popup and notifications." so the single toggle's effect isn't
+> under-stated now that it also governs notification wording (§5.5).
+
+---
+
+## 5.5 Notification wording gating (core/notifier.ts)
+
+> **As-built state (verified, not assumed):** notification wording is driven by
+> `NotificationPrefs.spoilerSafeWording` (default true) in `buildMessage`, which is a SEPARATE field
+> from `SpoilerPrefs.enabled`. The options page exposes no notification toggle, so `spoilerSafeWording`
+> currently sits at its default and is never user-controllable. Result: turning `enabled` off changes
+> the popup but **not** notifications — the confusing state called out in §1. This section closes that.
+
+**Decision (locked):** `SpoilerPrefs.enabled` is the source of truth. `spoilerSafeWording` becomes a
+subordinate of the master switch (semantically peer to `hideRunning`), gated at the call site. The
+pure notifier logic is NOT changed — `computeNotifications` and `buildMessage` already handle
+`spoilerSafeWording` correctly; we only adjust the value they receive.
+
+Add one pure helper to `core/notifier.ts`:
+```ts
+/**
+ * Gates spoiler-safe wording behind the spoiler master switch. When spoiler-free
+ * mode is off, END notifications show the score even if spoilerSafeWording is true,
+ * so the single visible toggle governs both popup masking and notification wording.
+ * Apply at fire time (per alarm) so a mid-session toggle takes effect immediately.
+ */
+export function gateNotificationPrefs(
+  prefs: NotificationPrefs,
+  spoilerEnabled: boolean,
+): NotificationPrefs {
+  return spoilerEnabled ? prefs : { ...prefs, spoilerSafeWording: false };
+}
+```
+
+**Background wiring (call site):** in the alarm/refresh handler that currently calls
+`computeNotifications`, also read `getSpoilerPrefs()` and gate before computing. Reading per-tick
+satisfies "read at fire time", so a mid-session toggle is honoured without extra plumbing:
+```ts
+const [notif, spoiler] = await Promise.all([getNotificationPrefs(), getSpoilerPrefs()]);
+const effective = gateNotificationPrefs(notif, spoiler.enabled);
+const plan = computeNotifications(matches, effective, nowUtc, sent);
+```
+> Claude Code: locate the existing `computeNotifications` call site in `background/` and apply the
+> gate there. Do not change `computeNotifications` or `buildMessage` themselves.
+
+**Scope boundary:** the gate only forces `spoilerSafeWording` to false when the master switch is off.
+It must not touch `enabled` (the NotificationPrefs master off-switch), `notifyOnEnd`, `leadMinutes`,
+or the PRE path — a pre-match reminder carries no score and is unaffected.
+
 ---
 
 ## 6. Test plan (Vitest)
@@ -132,24 +187,37 @@ In the options page, alongside the existing `hideRunning` toggle, add a master t
 Plus the existing reveal-state tests stay green. Update any existing test that constructs
 `SpoilerPrefs` to include the new `enabled` field (default true).
 
+### Notification gating (`gateNotificationPrefs`)
+
+| Scenario | Expectation |
+|---|---|
+| `EnabledSafeWording_StaysSafe` | spoilerEnabled=true, spoilerSafeWording=true → unchanged (END stays spoiler-safe; regression) |
+| `DisabledSafeWording_ForcesScore` | spoilerEnabled=false, spoilerSafeWording=true → `spoilerSafeWording` forced false; `buildMessage(end)` includes score |
+| `EnabledNonSafe_Unchanged` | spoilerEnabled=true, spoilerSafeWording=false → unchanged (false) |
+| `GateLeavesOtherFieldsIntact` | `enabled`, `notifyOnEnd`, `leadMinutes` unchanged by the gate |
+| `GateDoesNotAffectPre` | PRE message identical regardless of `spoilerEnabled` |
+
 ---
 
 ## Closing
 
-✅ **This spec delivers**: the optional, default-on master switch (`enabled`), the updated
-`getSpoilerDecision` ordering (master switch checked first), the settings toggle, and tests — with no
-change needed to `SpoilerGuard`.
+✅ **Already in place (verified against current code):** `SpoilerPrefs.enabled` exists and defaults
+to true; `getSpoilerDecision` checks `!enabled` first; the options page exposes the "Spoiler-free
+mode" toggle and greys out `hideRunning` when the master switch is off; `SpoilerGuard` is untouched.
+The popup masking + settings UI (§2–§5) are done.
 
-📋 **Next steps**:
-1. Put this spec in `docs/` (overwrite the old Spoiler Spec).
-2. Claude Code: add `enabled` to `SpoilerPrefs`/defaults, update `getSpoilerDecision`, add the settings
-   toggle, update tests, and remove the stale page-level comment. No commit.
-3. Manual check: toggle the master switch off → finished-match scores show immediately in the popup;
-   toggle on → they mask again.
+🔧 **Remaining work (the notification tail, §5.5):**
+1. Overwrite the old Spoiler Spec in `docs/` with this version.
+2. Claude Code: add `gateNotificationPrefs` to `core/notifier.ts`; in the `background/`
+   `computeNotifications` call site, read `getSpoilerPrefs()` and gate before computing; add the
+   `gateNotificationPrefs` tests; update the options hint copy. **No commit.**
+3. Manual check: follow a finished match, turn spoiler-free mode OFF → the END notification shows the
+   score; turn it ON → it stays "VOD ready" with no score.
 
 ⚠️ **Watch**:
-- Check `!enabled` FIRST in `getSpoilerDecision` (before revealed/status).
-- Default `enabled` to true so existing stored prefs (without the field) stay spoiler-free.
-- Keep the status switch exhaustive (no default).
-- `SpoilerGuard` is unchanged — don't touch it.
-- Remove the stale "page-level content script" comment.
+- Gate only forces `spoilerSafeWording` to false when the master switch is off; touch nothing else
+  in `NotificationPrefs`, and never the PRE path.
+- Gate at the call site per alarm tick (fire-time read), so a mid-session toggle is honoured.
+- Do NOT modify `computeNotifications` or `buildMessage` — they already handle `spoilerSafeWording`.
+- Keep the `getSpoilerDecision` status switch exhaustive (no default).
+- Remove the stale "page-level content script" comment in `core/spoiler.ts` if still present.
