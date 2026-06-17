@@ -1,6 +1,5 @@
-// MVP scope: LoL + CS2 only.
 // Extend GameId only once a new game's PandaScore structure has been verified.
-export type GameId = 'lol' | 'csgo';
+export type GameId = 'lol' | 'csgo' | 'dota2';
 
 // 'cancelled' uses British spelling; mapped from PandaScore's 'canceled' in the
 // datasource layer — the conversion lives there so our model stays consistent.

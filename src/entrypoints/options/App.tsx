@@ -20,6 +20,7 @@ const SEARCH_DEBOUNCE_MS = 300;
 const GAMES: ReadonlyArray<{ id: GameId; label: string }> = [
   { id: 'lol', label: 'League of Legends' },
   { id: 'csgo', label: 'Counter-Strike 2' },
+  { id: 'dota2', label: 'Dota 2' },
 ];
 
 type SearchState = 'idle' | 'loading' | 'done' | 'error';

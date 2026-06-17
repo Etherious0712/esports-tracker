@@ -56,6 +56,7 @@ const TEAM_SEARCH_PER_PAGE = 10;
 const GAME_ENDPOINT: Record<GameId, string> = {
   lol: 'lol',
   csgo: 'csgo',
+  dota2: 'dota2',
 };
 
 const MATCH_ENDPOINT_TYPES = ['running', 'upcoming', 'past'] as const;

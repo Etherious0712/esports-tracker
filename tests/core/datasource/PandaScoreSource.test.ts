@@ -10,6 +10,7 @@ import { AuthError } from '../../../src/core/datasource/IDataSource';
 import { hasResult } from '../../../src/core/models';
 import finishedFixture from '../../fixtures/pandascore/lol_match_finished.json';
 import notStartedFixture from '../../fixtures/pandascore/lol_match_notstarted.json';
+import dota2FinishedFixture from '../../fixtures/pandascore/dota2_match_finished.json';
 import teamsSearchFixture from '../../fixtures/pandascore/csgo_teams_search.json';
 
 // ── mapStatus ─────────────────────────────────────────────────────────────────
@@ -336,6 +337,35 @@ describe('PandaScoreSource.fetchMatches', () => {
     for (let i = 1; i < result.length; i++) {
       expect(result[i - 1]!.beginAtUtc <= result[i]!.beginAtUtc).toBe(true);
     }
+  });
+});
+
+// ── normaliseMatch — Dota 2 fixture ───────────────────────────────────────────
+
+describe('normaliseMatch (dota2 finished fixture)', () => {
+  it('NormaliseMatch_Dota2Finished_MapsCoreFields', () => {
+    const match = normaliseMatch(dota2FinishedFixture, 'dota2');
+    expect(match).not.toBeNull();
+    expect(match?.game).toBe('dota2');
+    expect(match?.status).toBe('finished');
+    expect(match?.bestOf).toBe(3);
+    expect(match?.competition).toStrictEqual({ id: '4106', name: 'The International' });
+  });
+
+  it('NormaliseMatch_Dota2Finished_WinnerAndResultsByTeamId', () => {
+    const match = normaliseMatch(dota2FinishedFixture, 'dota2')!;
+    expect(match.winnerId).toBe('137772');
+    expect(hasResult(match)).toBe(true);
+    // Scores associated by team_id, not array order.
+    expect(match.results.find(r => r.teamId === '137772')?.score).toBe(2);
+    expect(match.results.find(r => r.teamId === '137771')?.score).toBe(0);
+  });
+
+  it('NormaliseMatch_Dota2Finished_NullAcronymFallsBack', () => {
+    // "Game Master" has acronym null in the real response → name-truncation fallback.
+    const match = normaliseMatch(dota2FinishedFixture, 'dota2')!;
+    expect(match.teamB.id).toBe('137771');
+    expect(match.teamB.acronym).toBe('GAME');
   });
 });
 

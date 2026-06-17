@@ -28,7 +28,7 @@ export type DashboardView = StatusSection[];
 const SECTION_ORDER: DashboardStatus[] = ['running', 'notStarted', 'finished'];
 
 // Stable game order within a section. Games outside this list sort after, by id.
-const GAME_ORDER: GameId[] = ['lol', 'csgo'];
+const GAME_ORDER: GameId[] = ['lol', 'csgo', 'dota2'];
 
 function gameRank(game: GameId): number {
   const index = GAME_ORDER.indexOf(game);

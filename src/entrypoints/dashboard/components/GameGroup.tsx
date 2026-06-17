@@ -6,6 +6,7 @@ import { TournamentGroup } from './TournamentGroup';
 const GAME_LABEL: Record<GameId, string> = {
   lol: 'League of Legends',
   csgo: 'Counter-Strike 2',
+  dota2: 'Dota 2',
 };
 
 interface GameGroupProps {

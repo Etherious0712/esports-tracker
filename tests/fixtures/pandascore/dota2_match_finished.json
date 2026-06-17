@@ -1,0 +1,179 @@
+{
+ "forfeit": false,
+ "results": [
+  {
+   "score": 2,
+   "team_id": 137772
+  },
+  {
+   "score": 0,
+   "team_id": 137771
+  }
+ ],
+ "league_id": 4106,
+ "videogame_title": null,
+ "scheduled_at": "2026-06-17T04:00:00Z",
+ "winner_type": "Team",
+ "games": [
+  {
+   "complete": true,
+   "id": 737246,
+   "position": 1,
+   "status": "finished",
+   "length": 2581,
+   "finished": true,
+   "match_id": 1539213,
+   "winner": {
+    "id": 137772,
+    "type": "Team"
+   },
+   "begin_at": "2026-06-17T04:00:29Z",
+   "detailed_stats": true,
+   "end_at": "2026-06-17T04:58:44Z",
+   "forfeit": false,
+   "winner_type": "Team"
+  },
+  {
+   "complete": true,
+   "id": 737247,
+   "position": 2,
+   "status": "finished",
+   "length": 3138,
+   "finished": true,
+   "match_id": 1539213,
+   "winner": {
+    "id": 137772,
+    "type": "Team"
+   },
+   "begin_at": "2026-06-17T05:11:39Z",
+   "detailed_stats": true,
+   "end_at": "2026-06-17T06:17:41Z",
+   "forfeit": false,
+   "winner_type": "Team"
+  }
+ ],
+ "slug": "game-master-2026-06-17",
+ "videogame": {
+  "id": 4,
+  "name": "Dota 2",
+  "slug": "dota-2"
+ },
+ "tournament_id": 21242,
+ "original_scheduled_at": "2026-06-17T04:00:00Z",
+ "streams_list": [
+  {
+   "main": true,
+   "language": "zh",
+   "embed_url": null,
+   "official": true,
+   "raw_url": "https://www.douyu.com/6829849"
+  },
+  {
+   "main": false,
+   "language": "zh",
+   "embed_url": "https://liveshare.huya.com/iframe/825801",
+   "official": false,
+   "raw_url": "https://www.huya.com/825801"
+  }
+ ],
+ "modified_at": "2026-06-17T06:51:02Z",
+ "serie": {
+  "id": 10715,
+  "name": "China Closed Qualifier",
+  "year": 2026,
+  "slug": "the-international-china-closed-qualifier-2026",
+  "begin_at": "2026-06-15T04:00:00Z",
+  "end_at": "2026-06-18T12:00:00Z",
+  "winner_id": null,
+  "winner_type": "Team",
+  "modified_at": "2026-06-15T17:17:24Z",
+  "league_id": 4106,
+  "season": null,
+  "full_name": "China Closed Qualifier 2026"
+ },
+ "status": "finished",
+ "opponents": [
+  {
+   "type": "Team",
+   "opponent": {
+    "id": 137772,
+    "name": "Team Refuser",
+    "location": "CN",
+    "slug": "team-refuser",
+    "modified_at": "2026-06-14T07:04:44Z",
+    "acronym": "REF",
+    "image_url": "https://cdn-api.pandascore.co/images/team/image/137772/148px_team_refuser_allmode.png",
+    "dark_mode_image_url": null
+   }
+  },
+  {
+   "type": "Team",
+   "opponent": {
+    "id": 137771,
+    "name": "Game Master",
+    "location": "CN",
+    "slug": "game-master",
+    "modified_at": "2026-06-14T07:04:43Z",
+    "acronym": null,
+    "image_url": "https://cdn-api.pandascore.co/images/team/image/137771/555px_game_master_lightmode.png",
+    "dark_mode_image_url": "https://cdn-api.pandascore.co/dark_images/team/dark_image/137771/555px_game_master_darkmode.png"
+   }
+  }
+ ],
+ "draw": false,
+ "game_advantage": null,
+ "winner_id": 137772,
+ "winner": {
+  "id": 137772,
+  "name": "Team Refuser",
+  "location": "CN",
+  "slug": "team-refuser",
+  "modified_at": "2026-06-14T07:04:44Z",
+  "acronym": "REF",
+  "image_url": "https://cdn-api.pandascore.co/images/team/image/137772/148px_team_refuser_allmode.png",
+  "dark_mode_image_url": null
+ },
+ "begin_at": "2026-06-17T04:00:26Z",
+ "live": {
+  "supported": false,
+  "url": null,
+  "opens_at": null
+ },
+ "videogame_version": null,
+ "number_of_games": 3,
+ "match_type": "best_of",
+ "id": 1539213,
+ "name": "Lower bracket quarterfinal 2: REF vs Game Master",
+ "end_at": "2026-06-17T06:17:41Z",
+ "league": {
+  "id": 4106,
+  "name": "The International",
+  "url": null,
+  "slug": "the-international",
+  "modified_at": "2024-04-17T21:12:22Z",
+  "image_url": "https://cdn-api.pandascore.co/images/league/image/4106/1200px-the_international_2023_lightmode-png"
+ },
+ "rescheduled": false,
+ "serie_id": 10715,
+ "detailed_stats": true,
+ "tournament": {
+  "id": 21242,
+  "name": "Playoffs",
+  "type": "online",
+  "country": null,
+  "slug": "the-international-china-closed-qualifier-2026-playoffs",
+  "begin_at": "2026-06-15T04:00:00Z",
+  "detailed_stats": true,
+  "end_at": "2026-06-18T12:00:00Z",
+  "winner_id": null,
+  "winner_type": "Team",
+  "serie_id": 10715,
+  "modified_at": "2026-06-15T17:17:24Z",
+  "league_id": 4106,
+  "prizepool": null,
+  "tier": "b",
+  "has_bracket": true,
+  "region": "ASIA",
+  "live_supported": false
+ }
+}
