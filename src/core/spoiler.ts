@@ -54,8 +54,8 @@ export function getSpoilerDecision(
 
 // ── Reveal state ("reveal once, revealed everywhere") ─────────────────────────
 //
-// Stored under a single key holding the array of revealed match ids, so a content
-// script scanning a page loads the whole set in one read rather than N reads.
+// Stored under a single key holding the array of revealed match ids, so a UI
+// surface loads the whole set in one read rather than N reads.
 // Persisted to chrome.storage.local (per-device). Stores only match ids — NEVER scores.
 
 const KEY_REVEALED = 'spoiler:revealed';
